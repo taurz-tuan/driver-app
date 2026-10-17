@@ -1,0 +1,3338 @@
+<!doctype html>
+<html>
+
+<head>
+  <meta charset=utf8>
+  <meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <style>
+    :root {
+      color-scheme: light;
+      box-sizing: border-box;
+      padding-top: env(safe-area-inset-top, 0px);
+      padding-bottom: env(safe-area-inset-bottom, 0px)
+    }
+
+    html {
+      scroll-padding-top: env(safe-area-inset-top, 0px)
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      font: 14px -apple-system, BlinkMacSystemFont, sans-serif;
+      background: #fff;
+      color: #000
+    }
+
+    img {
+      max-width: 100%
+    }
+
+    [hidden]:not([hidden=until-found i]) {
+      display: none !important
+    }
+  </style>
+</head>
+
+<body>
+  <title>Shipper Route Assist</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap"
+    rel="stylesheet">
+  <style>
+    /* Layout: one portrait phone frame centred on a neutral stage; 4 screens (list, route, stop detail, completion) switch inside it. */
+    :root {
+      --brand: #EE4D2D;
+      --brand-ink: #fff;
+      --brand-text: #C9381A;
+      --brand-soft: #FFEDE8;
+      --brand-line: #F6B4A5;
+      --stage: #ECE6E2;
+      --bezel: #19171A;
+      --app: #F6F3F1;
+      --surface: #FFFFFF;
+      --surface2: #F4F0EE;
+      --fg: #2A2321;
+      --muted: #7D736E;
+      --line: #ECE6E3;
+      --ok: #168A55;
+      --ok-soft: #E1F5EA;
+      --warn: #B7740A;
+      --warn-soft: #FFF1D6;
+      --bad: #D03434;
+      --bad-soft: #FDE6E6;
+      --map-land: #F0EBE7;
+      --map-road: #FFFFFF;
+      --map-water: #CFE3F1;
+      --map-park: #D6E7D2;
+      --map-label: #9A8F89;
+      --sh: 0 6px 20px -8px rgba(60, 30, 20, .18);
+      --sh-up: 0 -10px 28px -12px rgba(60, 30, 20, .22);
+      --ph1: #C6B6AC;
+      --ph2: #8A776C;
+      --font: 'Be Vietnam Pro', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+    }
+
+    @media (prefers-color-scheme:dark) {
+      :root:not([data-theme="light"]) {
+        --brand: #F2583A;
+        --brand-text: #FF8E74;
+        --brand-soft: #3A211B;
+        --brand-line: #7A3426;
+        --stage: #0E0C0B;
+        --bezel: #2A2729;
+        --app: #151211;
+        --surface: #201C1A;
+        --surface2: #2B2623;
+        --fg: #F5EFEC;
+        --muted: #A59B95;
+        --line: #352F2C;
+        --ok: #43C98B;
+        --ok-soft: #14352A;
+        --warn: #F2B13D;
+        --warn-soft: #3B2F12;
+        --bad: #FF7070;
+        --bad-soft: #3E1B1B;
+        --map-land: #1D1917;
+        --map-road: #2E2825;
+        --map-water: #1D3040;
+        --map-park: #1F3321;
+        --map-label: #7C726C;
+        --sh: 0 6px 20px -8px rgba(0, 0, 0, .6);
+        --sh-up: 0 -10px 28px -12px rgba(0, 0, 0, .7);
+        color-scheme: dark
+      }
+    }
+
+    :root[data-theme="dark"] {
+      --brand: #F2583A;
+      --brand-text: #FF8E74;
+      --brand-soft: #3A211B;
+      --brand-line: #7A3426;
+      --stage: #0E0C0B;
+      --bezel: #2A2729;
+      --app: #151211;
+      --surface: #201C1A;
+      --surface2: #2B2623;
+      --fg: #F5EFEC;
+      --muted: #A59B95;
+      --line: #352F2C;
+      --ok: #43C98B;
+      --ok-soft: #14352A;
+      --warn: #F2B13D;
+      --warn-soft: #3B2F12;
+      --bad: #FF7070;
+      --bad-soft: #3E1B1B;
+      --map-land: #1D1917;
+      --map-road: #2E2825;
+      --map-water: #1D3040;
+      --map-park: #1F3321;
+      --map-label: #7C726C;
+      --sh: 0 6px 20px -8px rgba(0, 0, 0, .6);
+      --sh-up: 0 -10px 28px -12px rgba(0, 0, 0, .7);
+      color-scheme: dark
+    }
+
+    body {
+      background: var(--stage);
+      color: var(--fg);
+      font-family: var(--font);
+      -webkit-font-smoothing: antialiased
+    }
+
+    * {
+      box-sizing: border-box
+    }
+
+    button {
+      font: inherit;
+      color: inherit;
+      border: 0;
+      background: none;
+      cursor: pointer;
+      padding: 0
+    }
+
+    :focus-visible {
+      outline: 2px solid var(--brand);
+      outline-offset: 2px
+    }
+
+    .stage {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+      padding-block: 24px;
+      padding-inline: 16px
+    }
+
+    .phone {
+      position: relative;
+      width: 390px;
+      height: 800px;
+      max-width: 100%;
+      border-radius: 56px;
+      background: var(--bezel);
+      padding: 10px;
+      box-shadow: 0 30px 60px -24px rgba(40, 20, 10, .45)
+    }
+
+    .glass {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      border-radius: 46px;
+      overflow: hidden;
+      background: var(--app)
+    }
+
+    .island {
+      position: absolute;
+      top: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 92px;
+      height: 26px;
+      border-radius: 99px;
+      background: #000;
+      z-index: 30
+    }
+
+    .status {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 46px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 6px 28px 0;
+      font-size: 13px;
+      font-weight: 700;
+      z-index: 25;
+      pointer-events: none
+    }
+
+    .status .sig {
+      display: flex;
+      gap: 5px;
+      align-items: center
+    }
+
+    .bat {
+      width: 22px;
+      height: 11px;
+      border-radius: 3.5px;
+      border: 1.5px solid currentColor;
+      position: relative;
+      opacity: .9
+    }
+
+    .bat::after {
+      content: '';
+      position: absolute;
+      inset: 1.5px;
+      right: 5px;
+      background: currentColor;
+      border-radius: 1.5px
+    }
+
+    .mapview .status {
+      color: var(--fg)
+    }
+
+    .scr {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      padding-top: 46px;
+      background: var(--app)
+    }
+
+    .scr.enter {
+      animation: in .28s ease-out
+    }
+
+    @keyframes in {
+      from {
+        opacity: 0;
+        transform: translateX(14px)
+      }
+
+      to {
+        opacity: 1;
+        transform: none
+      }
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg)
+      }
+    }
+
+    @keyframes pulse {
+      0% {
+        opacity: .55;
+        transform: scale(.7)
+      }
+
+      100% {
+        opacity: 0;
+        transform: scale(2.1)
+      }
+    }
+
+    @keyframes rise {
+      from {
+        opacity: 0;
+        transform: translateY(24px)
+      }
+
+      to {
+        opacity: 1;
+        transform: none
+      }
+    }
+
+    @keyframes rec {
+      50% {
+        box-shadow: 0 0 0 8px rgba(238, 77, 45, .18)
+      }
+    }
+
+    @media (prefers-reduced-motion:reduce) {
+      * {
+        animation: none !important;
+        transition: none !important
+      }
+    }
+
+    .scroll {
+      flex: 1;
+      min-height: 0;
+      overflow-y: auto;
+      overscroll-behavior: contain;
+      scrollbar-width: none
+    }
+
+    .scroll::-webkit-scrollbar {
+      display: none
+    }
+
+    .top {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 6px 16px 12px
+    }
+
+    .avatar {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background: var(--brand);
+      color: #fff;
+      display: grid;
+      place-items: center;
+      font-weight: 800;
+      font-size: 15px;
+      flex: none
+    }
+
+    .hello {
+      flex: 1;
+      min-width: 0
+    }
+
+    .hello small {
+      display: block;
+      font-size: 12px;
+      color: var(--muted)
+    }
+
+    .hello strong {
+      font-size: 17px;
+      font-weight: 700;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      display: block
+    }
+
+    .cbtn {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: var(--surface);
+      box-shadow: var(--sh);
+      display: grid;
+      place-items: center;
+      flex: none;
+      position: relative
+    }
+
+    .cbtn.sm {
+      width: 36px;
+      height: 36px
+    }
+
+    .cbtn .dot {
+      position: absolute;
+      top: 9px;
+      right: 10px;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--brand);
+      border: 2px solid var(--surface)
+    }
+
+    .online {
+      height: 40px;
+      padding: 0 12px 0 10px;
+      border-radius: 999px;
+      background: var(--surface);
+      box-shadow: var(--sh);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      flex: none
+    }
+
+    .online i {
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      background: var(--ok)
+    }
+
+    .online.off i {
+      background: var(--muted)
+    }
+
+    .xp {
+      margin: 0 16px 12px;
+      background: var(--surface);
+      border-radius: 20px;
+      padding: 12px 14px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      box-shadow: var(--sh)
+    }
+
+    .lvl {
+      width: 40px;
+      height: 40px;
+      border-radius: 14px;
+      background: var(--brand-soft);
+      color: var(--brand-text);
+      display: grid;
+      place-items: center;
+      font-weight: 800;
+      font-size: 16px;
+      flex: none
+    }
+
+    .xp .meta {
+      flex: 1;
+      min-width: 0
+    }
+
+    .xp .row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 12px;
+      color: var(--muted);
+      margin-bottom: 6px
+    }
+
+    .xp .row b {
+      color: var(--fg);
+      font-weight: 700;
+      font-size: 13px
+    }
+
+    .bar {
+      height: 8px;
+      border-radius: 99px;
+      background: var(--surface2);
+      overflow: hidden
+    }
+
+    .bar i {
+      display: block;
+      height: 100%;
+      border-radius: 99px;
+      background: var(--brand);
+      transition: width .6s ease
+    }
+
+    .search {
+      margin: 0 16px 14px;
+      height: 44px;
+      border-radius: 999px;
+      background: var(--surface);
+      box-shadow: var(--sh);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 0 16px;
+      color: var(--muted)
+    }
+
+    .search input {
+      flex: 1;
+      min-width: 0;
+      border: 0;
+      background: none;
+      font: inherit;
+      font-size: 14px;
+      color: var(--fg);
+      outline: 0
+    }
+
+    .h1 {
+      font-size: 22px;
+      font-weight: 800;
+      letter-spacing: -.01em;
+      margin: 0;
+      text-wrap: balance
+    }
+
+    .sub {
+      font-size: 13px;
+      color: var(--muted);
+      margin: 2px 0 0
+    }
+
+    .sec {
+      padding: 0 16px 10px
+    }
+
+    .chips {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      padding: 0 16px 12px;
+      scrollbar-width: none
+    }
+
+    .chips::-webkit-scrollbar {
+      display: none
+    }
+
+    .chip {
+      flex: none;
+      height: 36px;
+      padding: 0 14px;
+      border-radius: 999px;
+      background: var(--surface);
+      box-shadow: var(--sh);
+      font-size: 13px;
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      color: var(--muted)
+    }
+
+    .chip.on {
+      background: var(--brand);
+      color: #fff
+    }
+
+    .chip.line {
+      box-shadow: none;
+      border: 1.5px solid var(--line);
+      background: var(--surface)
+    }
+
+    .chip.line.on {
+      background: var(--brand-soft);
+      border-color: var(--brand-line);
+      color: var(--brand-text)
+    }
+
+    .list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      padding: 0 16px 200px
+    }
+
+    .ocard {
+      background: var(--surface);
+      border-radius: 22px;
+      padding: 14px;
+      display: flex;
+      gap: 12px;
+      box-shadow: var(--sh);
+      cursor: pointer;
+      text-align: left
+    }
+
+    .ocard.done {
+      opacity: .6
+    }
+
+    .seq {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: var(--brand-soft);
+      color: var(--brand-text);
+      display: grid;
+      place-items: center;
+      font-weight: 800;
+      flex: none
+    }
+
+    .seq.n {
+      background: var(--brand);
+      color: #fff
+    }
+
+    .seq.ok {
+      background: var(--ok-soft);
+      color: var(--ok)
+    }
+
+    .ocard .body {
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 6px
+    }
+
+    .ocard .l1 {
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      align-items: center
+    }
+
+    .ocard .name {
+      font-weight: 700;
+      font-size: 15px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis
+    }
+
+    .addr {
+      display: flex;
+      gap: 6px;
+      align-items: flex-start;
+      font-size: 13px;
+      color: var(--muted);
+      line-height: 1.35
+    }
+
+    .addr svg {
+      margin-top: 1px
+    }
+
+    .meta-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px 10px;
+      align-items: center;
+      font-size: 12px;
+      color: var(--muted)
+    }
+
+    .meta-row span {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      height: 22px;
+      padding: 0 9px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 700;
+      white-space: nowrap;
+      flex: none
+    }
+
+    .p-brand {
+      background: var(--brand-soft);
+      color: var(--brand-text)
+    }
+
+    .p-ok {
+      background: var(--ok-soft);
+      color: var(--ok)
+    }
+
+    .p-warn {
+      background: var(--warn-soft);
+      color: var(--warn)
+    }
+
+    .p-bad {
+      background: var(--bad-soft);
+      color: var(--bad)
+    }
+
+    .p-mute {
+      background: var(--surface2);
+      color: var(--muted)
+    }
+
+    .dock {
+      position: absolute;
+      left: 12px;
+      right: 12px;
+      bottom: 88px;
+      background: var(--surface);
+      border-radius: 26px;
+      padding: 12px;
+      box-shadow: 0 14px 34px -10px rgba(60, 30, 20, .35);
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      z-index: 6
+    }
+
+    .dock p {
+      margin: 0;
+      text-align: center;
+      font-size: 12px;
+      color: var(--muted)
+    }
+
+    .btn {
+      height: 48px;
+      border-radius: 999px;
+      padding: 0 20px;
+      font-weight: 700;
+      font-size: 15px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      white-space: nowrap
+    }
+
+    .btn.primary {
+      background: var(--brand);
+      color: #fff;
+      box-shadow: 0 10px 22px -8px rgba(238, 77, 45, .6)
+    }
+
+    .btn.soft {
+      background: var(--brand-soft);
+      color: var(--brand-text)
+    }
+
+    .btn.ghost {
+      background: var(--surface2);
+      color: var(--fg)
+    }
+
+    .btn.block {
+      width: 100%
+    }
+
+    .btn[disabled] {
+      opacity: .45;
+      box-shadow: none;
+      cursor: not-allowed
+    }
+
+    .nav {
+      position: absolute;
+      left: 12px;
+      right: 12px;
+      bottom: 12px;
+      height: 64px;
+      border-radius: 26px;
+      background: var(--surface);
+      box-shadow: 0 12px 30px -10px rgba(60, 30, 20, .4);
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      padding: 6px;
+      gap: 4px;
+      z-index: 7
+    }
+
+    .nav button {
+      border-radius: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 2px;
+      font-size: 10.5px;
+      font-weight: 600;
+      color: var(--muted)
+    }
+
+    .nav button.on {
+      background: var(--brand-soft);
+      color: var(--brand-text)
+    }
+
+    .mapbox {
+      position: relative;
+      height: 322px;
+      flex: none;
+      overflow: hidden;
+      margin-top: -46px;
+      padding-top: 0
+    }
+
+    .mapbox>svg.mapsvg {
+      display: block;
+      width: 100%;
+      height: 100%
+    }
+
+    .maptop {
+      position: absolute;
+      top: 52px;
+      left: 12px;
+      right: 12px;
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      z-index: 4
+    }
+
+    .maptitle {
+      flex: 1;
+      min-width: 0;
+      height: 36px;
+      border-radius: 999px;
+      background: var(--surface);
+      box-shadow: var(--sh);
+      display: flex;
+      align-items: center;
+      padding: 0 14px;
+      font-size: 13px;
+      font-weight: 700;
+      gap: 6px;
+      white-space: nowrap;
+      overflow: hidden
+    }
+
+    .mapchip {
+      position: absolute;
+      left: 12px;
+      bottom: 34px;
+      height: 32px;
+      border-radius: 999px;
+      background: var(--surface);
+      box-shadow: var(--sh);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 0 12px;
+      font-size: 12px;
+      font-weight: 700;
+      z-index: 4
+    }
+
+    .mapchip.r {
+      left: auto;
+      right: 12px;
+      background: var(--brand);
+      color: #fff
+    }
+
+    .maphint {
+      position: absolute;
+      left: 12px;
+      bottom: 34px;
+      max-width: 70%;
+      font-size: 11px;
+      font-weight: 600;
+      background: var(--surface);
+      color: var(--muted);
+      padding: 7px 12px;
+      border-radius: 999px;
+      box-shadow: var(--sh);
+      z-index: 4
+    }
+
+    .sheet {
+      flex: 1;
+      min-height: 0;
+      margin-top: -24px;
+      background: var(--app);
+      border-radius: 28px 28px 0 0;
+      position: relative;
+      box-shadow: var(--sh-up);
+      overflow-y: auto;
+      padding: 10px 16px 110px;
+      scrollbar-width: none;
+      z-index: 5
+    }
+
+    .sheet::-webkit-scrollbar {
+      display: none
+    }
+
+    .grab {
+      width: 40px;
+      height: 4px;
+      border-radius: 2px;
+      background: var(--line);
+      margin: 0 auto 14px
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      margin: 14px 0
+    }
+
+    .stat {
+      background: var(--surface);
+      border-radius: 16px;
+      padding: 10px 12px;
+      box-shadow: var(--sh);
+      min-width: 0
+    }
+
+    .stat b {
+      display: block;
+      font-size: 15px;
+      font-weight: 800;
+      font-variant-numeric: tabular-nums;
+      white-space: nowrap
+    }
+
+    .stat span {
+      font-size: 11px;
+      color: var(--muted)
+    }
+
+    .banner {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      background: var(--ok-soft);
+      color: var(--ok);
+      border-radius: 16px;
+      padding: 10px 12px;
+      font-size: 12.5px;
+      font-weight: 600;
+      margin-bottom: 14px
+    }
+
+    .h2 {
+      font-size: 15px;
+      font-weight: 700;
+      margin: 0 0 10px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px
+    }
+
+    .steps {
+      display: flex;
+      overflow-x: auto;
+      margin: 0 -16px 14px;
+      padding: 4px 16px 8px;
+      scrollbar-width: none
+    }
+
+    .steps::-webkit-scrollbar {
+      display: none
+    }
+
+    .st {
+      flex: none;
+      width: 74px;
+      text-align: center;
+      position: relative;
+      font-size: 11px;
+      color: var(--muted)
+    }
+
+    .st::before {
+      content: '';
+      position: absolute;
+      top: 14px;
+      left: -50%;
+      width: 100%;
+      height: 3px;
+      background: var(--line)
+    }
+
+    .st:first-child::before {
+      display: none
+    }
+
+    .st i {
+      position: relative;
+      z-index: 1;
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      background: var(--surface);
+      border: 2px solid var(--line);
+      display: grid;
+      place-items: center;
+      margin: 0 auto 6px;
+      font-style: normal;
+      font-weight: 800;
+      font-size: 12px;
+      color: var(--muted)
+    }
+
+    .st.cur i {
+      background: var(--brand);
+      border-color: var(--brand);
+      color: #fff
+    }
+
+    .st.cur::before,
+    .st.done::before {
+      background: var(--brand)
+    }
+
+    .st.done i {
+      background: var(--ok);
+      border-color: var(--ok);
+      color: #fff
+    }
+
+    .st.cur {
+      color: var(--fg);
+      font-weight: 700
+    }
+
+    .st b {
+      display: block;
+      font-weight: 600;
+      color: var(--fg);
+      font-variant-numeric: tabular-nums
+    }
+
+    .srow {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      background: var(--surface);
+      border-radius: 18px;
+      padding: 10px 12px;
+      box-shadow: var(--sh);
+      cursor: pointer;
+      margin-bottom: 8px
+    }
+
+    .srow .t {
+      flex: 1;
+      min-width: 0
+    }
+
+    .srow .t b {
+      display: block;
+      font-size: 14px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis
+    }
+
+    .srow .t span {
+      font-size: 12px;
+      color: var(--muted);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      display: block
+    }
+
+    .srow .e {
+      font-size: 12px;
+      font-weight: 700;
+      font-variant-numeric: tabular-nums;
+      color: var(--muted);
+      text-align: right
+    }
+
+    .foot {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: var(--surface);
+      border-radius: 26px 26px 0 0;
+      box-shadow: var(--sh-up);
+      padding: 12px 16px 16px;
+      display: flex;
+      gap: 10px;
+      z-index: 8;
+      flex-wrap: wrap
+    }
+
+    .foot .hintline {
+      flex-basis: 100%;
+      margin: 0;
+      text-align: center;
+      font-size: 12px;
+      color: var(--warn)
+    }
+
+    .card {
+      background: var(--surface);
+      border-radius: 22px;
+      padding: 14px;
+      box-shadow: var(--sh);
+      margin-bottom: 14px
+    }
+
+    .ohead {
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      align-items: flex-start
+    }
+
+    .ohead h2 {
+      margin: 4px 0 4px;
+      font-size: 19px;
+      font-weight: 800;
+      line-height: 1.2
+    }
+
+    .acts {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      margin-top: 12px
+    }
+
+    .act {
+      height: 44px;
+      border-radius: 999px;
+      background: var(--surface2);
+      font-size: 13px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px
+    }
+
+    .act.main {
+      background: var(--brand-soft);
+      color: var(--brand-text)
+    }
+
+    .kv {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px 10px;
+      margin-top: 14px
+    }
+
+    .kv div {
+      min-width: 0
+    }
+
+    .kv small {
+      display: block;
+      font-size: 11px;
+      color: var(--muted);
+      margin-bottom: 2px
+    }
+
+    .kv b {
+      font-size: 14px;
+      font-weight: 700;
+      font-variant-numeric: tabular-nums
+    }
+
+    .note {
+      background: var(--surface);
+      border-radius: 18px;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      box-shadow: var(--sh);
+      margin-bottom: 10px
+    }
+
+    .note.star {
+      box-shadow: inset 0 0 0 1.5px var(--brand-line), var(--sh)
+    }
+
+    .nh {
+      display: flex;
+      align-items: center;
+      gap: 8px
+    }
+
+    .nav-a {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: var(--surface2);
+      display: grid;
+      place-items: center;
+      font-size: 11px;
+      font-weight: 800;
+      flex: none
+    }
+
+    .nh .w {
+      flex: 1;
+      min-width: 0;
+      font-size: 12px;
+      color: var(--muted);
+      line-height: 1.3
+    }
+
+    .nh .w b {
+      color: var(--fg);
+      font-size: 13px
+    }
+
+    .starbtn {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      color: var(--muted);
+      flex: none
+    }
+
+    .starbtn.on {
+      color: var(--brand);
+      background: var(--brand-soft)
+    }
+
+    .starbtn.on svg {
+      fill: currentColor
+    }
+
+    .ntext {
+      font-size: 14px;
+      line-height: 1.45;
+      margin: 0
+    }
+
+    .ph {
+      height: 92px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, var(--ph1), var(--ph2));
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      padding: 8px 10px;
+      color: #fff;
+      font-size: 11px;
+      font-weight: 600;
+      overflow: hidden;
+      position: relative
+    }
+
+    .ph img {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover
+    }
+
+    .ph span {
+      position: relative;
+      background: rgba(0, 0, 0, .4);
+      padding: 2px 8px;
+      border-radius: 99px
+    }
+
+    .fb {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+      font-size: 12px;
+      color: var(--muted)
+    }
+
+    .vote {
+      height: 30px;
+      padding: 0 11px;
+      border-radius: 999px;
+      background: var(--surface2);
+      font-size: 12px;
+      font-weight: 700;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-variant-numeric: tabular-nums
+    }
+
+    .vote.on-ok {
+      background: var(--ok-soft);
+      color: var(--ok)
+    }
+
+    .vote.on-bad {
+      background: var(--bad-soft);
+      color: var(--bad)
+    }
+
+    .ta {
+      width: 100%;
+      min-height: 72px;
+      border-radius: 16px;
+      border: 1.5px solid var(--line);
+      background: var(--surface2);
+      padding: 10px 12px;
+      font: inherit;
+      font-size: 14px;
+      color: var(--fg);
+      resize: none;
+      display: block
+    }
+
+    .ta:focus {
+      outline: 0;
+      border-color: var(--brand)
+    }
+
+    .field-row {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      margin-top: 10px;
+      flex-wrap: wrap
+    }
+
+    .chipset {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin: 10px 0
+    }
+
+    .hero {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      padding: 4px 0 6px
+    }
+
+    .okc {
+      width: 64px;
+      height: 64px;
+      border-radius: 50%;
+      background: var(--ok);
+      color: #fff;
+      display: grid;
+      place-items: center;
+      margin-bottom: 10px;
+      box-shadow: 0 12px 24px -10px var(--ok)
+    }
+
+    .tl {
+      display: flex;
+      margin: 14px -4px 2px
+    }
+
+    .tl .st {
+      width: auto;
+      flex: 1
+    }
+
+    .circ {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      background: var(--surface2);
+      color: var(--muted);
+      flex: none
+    }
+
+    .circ.rec {
+      background: var(--brand);
+      color: #fff;
+      animation: rec 1.2s infinite
+    }
+
+    .circ.on {
+      background: var(--brand-soft);
+      color: var(--brand-text)
+    }
+
+    .circ.on svg {
+      fill: currentColor
+    }
+
+    .tog {
+      width: 48px;
+      height: 28px;
+      border-radius: 99px;
+      background: var(--line);
+      position: relative;
+      flex: none;
+      transition: background .2s
+    }
+
+    .tog::after {
+      content: '';
+      position: absolute;
+      top: 3px;
+      left: 3px;
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: #fff;
+      transition: transform .2s;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, .25)
+    }
+
+    .tog.on {
+      background: var(--ok)
+    }
+
+    .tog.on::after {
+      transform: translateX(20px)
+    }
+
+    .rowline {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px
+    }
+
+    .rowline b {
+      font-size: 14px
+    }
+
+    .rowline small {
+      display: block;
+      color: var(--muted);
+      font-size: 12px;
+      margin-top: 2px
+    }
+
+    .thumb {
+      width: 56px;
+      height: 56px;
+      border-radius: 14px;
+      object-fit: cover;
+      background: var(--surface2);
+      display: grid;
+      place-items: center;
+      color: var(--muted);
+      flex: none;
+      overflow: hidden
+    }
+
+    .thumb img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover
+    }
+
+    .drow {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      padding: 8px 0;
+      border-top: 1px solid var(--line);
+      font-size: 13px
+    }
+
+    .drow:first-child {
+      border-top: 0
+    }
+
+    .drow span {
+      flex: 1;
+      min-width: 0;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis
+    }
+
+    .earn {
+      display: flex;
+      justify-content: space-between;
+      font-size: 13px;
+      padding: 4px 0;
+      color: var(--muted)
+    }
+
+    .earn b {
+      color: var(--brand-text)
+    }
+
+    .overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(20, 10, 8, .5);
+      display: flex;
+      align-items: flex-end;
+      z-index: 40
+    }
+
+    .osheet {
+      width: 100%;
+      background: var(--surface);
+      border-radius: 28px 28px 0 0;
+      padding: 18px 16px 22px;
+      animation: rise .3s ease-out;
+      max-height: 92%;
+      overflow-y: auto
+    }
+
+    .osheet.center {
+      text-align: center
+    }
+
+    .spin {
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      border: 4px solid var(--brand-soft);
+      border-top-color: var(--brand);
+      animation: spin .8s linear infinite;
+      margin: 6px auto 14px
+    }
+
+    .toast {
+      position: absolute;
+      left: 16px;
+      right: 16px;
+      bottom: 96px;
+      background: #2A2321;
+      color: #fff;
+      border-radius: 16px;
+      padding: 11px 14px;
+      font-size: 13px;
+      font-weight: 600;
+      z-index: 50;
+      box-shadow: 0 12px 28px -8px rgba(0, 0, 0, .5);
+      animation: rise .25s ease-out;
+      text-align: center
+    }
+
+    .scr.nonav .sheet,
+    .scr.nonav .scroll {
+      padding-bottom: 130px
+    }
+
+    .pulse {
+      transform-box: fill-box;
+      transform-origin: center;
+      animation: pulse 1.8s ease-out infinite
+    }
+
+    .mk {
+      cursor: pointer
+    }
+
+    .hit {
+      cursor: pointer
+    }
+
+    .proto {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      justify-content: center;
+      align-items: center;
+      font-size: 12px;
+      color: var(--muted);
+      max-width: 390px
+    }
+
+    .proto button {
+      height: 32px;
+      padding: 0 12px;
+      border-radius: 999px;
+      background: var(--surface);
+      color: var(--fg);
+      font-size: 12px;
+      font-weight: 600;
+      box-shadow: var(--sh)
+    }
+
+    .proto button.on {
+      background: var(--brand);
+      color: #fff
+    }
+
+    .mt8 {
+      margin-top: 8px
+    }
+
+    @media (max-width:440px) {
+      .phone {
+        height: min(800px, calc(100svh - 70px));
+        min-height: 680px;
+        border-radius: 40px;
+        padding: 8px
+      }
+
+      .glass {
+        border-radius: 33px
+      }
+    }
+
+    /* ---- v2 additions: slot colours, two-column stage, logic panel ---- */
+    :root {
+      --s-m: #6D9BC3;
+      --s-a: #2F7F8F;
+      --s-e: var(--brand);
+      --tile: #FBF8F6
+    }
+
+    @media (prefers-color-scheme:dark) {
+      :root:not([data-theme="light"]) {
+        --s-m: #86B0D6;
+        --s-a: #4FB0C0;
+        --tile: #1B1715
+      }
+    }
+
+    :root[data-theme="dark"] {
+      --s-m: #86B0D6;
+      --s-a: #4FB0C0;
+      --tile: #1B1715
+    }
+
+    .stage {
+      padding-block: 24px;
+      padding-inline: 16px;
+      align-items: stretch
+    }
+
+    .wrap {
+      display: grid;
+      grid-template-columns: minmax(0, 390px) minmax(0, 460px);
+      gap: 28px;
+      justify-content: center;
+      align-items: start;
+      margin-inline: auto;
+      width: 100%;
+      max-width: 900px
+    }
+
+    .phonecol {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+      min-width: 0
+    }
+
+    @media (max-width:920px) {
+      .wrap {
+        grid-template-columns: minmax(0, 1fr);
+        max-width: 460px
+      }
+    }
+
+    .panel {
+      background: var(--surface);
+      border-radius: 28px;
+      box-shadow: var(--sh);
+      padding: 16px;
+      min-width: 0;
+      position: sticky;
+      top: 16px
+    }
+
+    @media (max-width:920px) {
+      .panel {
+        position: static
+      }
+    }
+
+    .ptabs {
+      display: flex;
+      gap: 6px;
+      background: var(--surface2);
+      border-radius: 999px;
+      padding: 4px;
+      margin-bottom: 14px
+    }
+
+    .ptabs button {
+      flex: 1;
+      height: 34px;
+      border-radius: 999px;
+      font-size: 12.5px;
+      font-weight: 700;
+      color: var(--muted)
+    }
+
+    .ptabs button.on {
+      background: var(--surface);
+      color: var(--brand-text);
+      box-shadow: var(--sh)
+    }
+
+    .pbody {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      min-width: 0
+    }
+
+    .ph1 {
+      font-size: 15px;
+      font-weight: 800;
+      margin: 0
+    }
+
+    .psub {
+      font-size: 12px;
+      color: var(--muted);
+      margin: 0;
+      line-height: 1.45
+    }
+
+    .pipe {
+      display: grid;
+      gap: 0
+    }
+
+    .pstep {
+      display: grid;
+      grid-template-columns: 28px minmax(0, 1fr);
+      gap: 10px;
+      position: relative;
+      padding-bottom: 12px
+    }
+
+    .pstep:last-child {
+      padding-bottom: 0
+    }
+
+    .pstep::before {
+      content: '';
+      position: absolute;
+      left: 13px;
+      top: 28px;
+      bottom: 0;
+      width: 2px;
+      background: var(--line)
+    }
+
+    .pstep:last-child::before {
+      display: none
+    }
+
+    .pstep .pn {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: var(--brand-soft);
+      color: var(--brand-text);
+      display: grid;
+      place-items: center;
+      font-size: 12px;
+      font-weight: 800
+    }
+
+    .pstep h4 {
+      margin: 0 0 4px;
+      font-size: 13px;
+      font-weight: 700
+    }
+
+    .pstep .box {
+      background: var(--tile);
+      border-radius: 14px;
+      padding: 8px 10px;
+      font-size: 12px;
+      line-height: 1.5;
+      color: var(--fg);
+      min-width: 0;
+      overflow-wrap: anywhere
+    }
+
+    .pstep .box b {
+      font-variant-numeric: tabular-nums
+    }
+
+    .kvl {
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr);
+      gap: 2px 10px
+    }
+
+    .kvl span:nth-child(odd) {
+      color: var(--muted)
+    }
+
+    .ptab {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+      font-variant-numeric: tabular-nums
+    }
+
+    .ptab th {
+      font-weight: 600;
+      color: var(--muted);
+      text-align: left;
+      padding: 6px 6px 6px 0;
+      border-bottom: 1px solid var(--line);
+      font-size: 11px
+    }
+
+    .ptab td {
+      padding: 7px 6px 7px 0;
+      border-bottom: 1px solid var(--line);
+      vertical-align: top
+    }
+
+    .ptab tr:last-child td {
+      border-bottom: 0
+    }
+
+    .tscroll {
+      overflow-x: auto;
+      margin-inline: -4px;
+      padding-inline: 4px
+    }
+
+    .edge {
+      display: flex;
+      gap: 8px;
+      align-items: flex-start;
+      font-size: 12px;
+      line-height: 1.45;
+      padding: 7px 10px;
+      border-radius: 12px;
+      background: var(--tile)
+    }
+
+    .edge.hit {
+      background: var(--warn-soft)
+    }
+
+    .edge .pill {
+      margin-top: 1px
+    }
+
+    .callouts {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 8px
+    }
+
+    .co {
+      background: var(--tile);
+      border-radius: 14px;
+      padding: 10px;
+      min-width: 0
+    }
+
+    .co b {
+      display: block;
+      font-size: 18px;
+      font-weight: 800;
+      font-variant-numeric: tabular-nums;
+      color: var(--brand-text)
+    }
+
+    .co span {
+      font-size: 11px;
+      color: var(--muted);
+      line-height: 1.35;
+      display: block
+    }
+
+    .legend {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      font-size: 11px;
+      color: var(--muted)
+    }
+
+    .legend i {
+      display: inline-block;
+      width: 10px;
+      height: 10px;
+      border-radius: 3px;
+      margin-right: 5px;
+      vertical-align: -1px
+    }
+
+    .chart {
+      width: 100%;
+      height: auto;
+      display: block
+    }
+
+    .seg {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap
+    }
+
+    .seg button {
+      height: 34px;
+      padding: 0 12px;
+      border-radius: 999px;
+      background: var(--surface2);
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--muted)
+    }
+
+    .seg button.on {
+      background: var(--brand);
+      color: #fff
+    }
+
+    .lbl {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      margin: 2px 0 6px
+    }
+
+    .inp {
+      height: 38px;
+      border-radius: 12px;
+      border: 1.5px solid var(--line);
+      background: var(--surface2);
+      padding: 0 12px;
+      font: inherit;
+      font-size: 13px;
+      color: var(--fg);
+      width: 100%;
+      min-width: 0
+    }
+
+    .inp:focus {
+      outline: 0;
+      border-color: var(--brand)
+    }
+
+    .task {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: var(--tile);
+      border-radius: 14px;
+      padding: 10px 12px
+    }
+
+    .task .tt {
+      flex: 1;
+      min-width: 0;
+      font-size: 12.5px;
+      line-height: 1.4
+    }
+
+    .task .tt b {
+      display: block;
+      font-size: 13px
+    }
+
+    .task button {
+      height: 32px;
+      padding: 0 12px;
+      border-radius: 999px;
+      background: var(--brand);
+      color: #fff;
+      font-size: 12px;
+      font-weight: 700;
+      flex: none
+    }
+
+    .task button.stop {
+      background: var(--surface2);
+      color: var(--fg)
+    }
+
+    .runtimer {
+      font-variant-numeric: tabular-nums;
+      font-weight: 800;
+      color: var(--brand-text)
+    }
+
+    .jump {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap
+    }
+
+    .jump button {
+      height: 30px;
+      padding: 0 11px;
+      border-radius: 999px;
+      background: var(--surface2);
+      font-size: 12px;
+      font-weight: 600
+    }
+
+    .jump button.on {
+      background: var(--brand);
+      color: #fff
+    }
+
+    /* in-phone additions */
+    .rk {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      height: 22px;
+      padding: 0 9px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 700;
+      white-space: nowrap;
+      flex: none;
+      font-variant-numeric: tabular-nums
+    }
+
+    .rk.red {
+      background: var(--bad-soft);
+      color: var(--bad)
+    }
+
+    .rk.amber {
+      background: var(--warn-soft);
+      color: var(--warn)
+    }
+
+    .rk.green {
+      background: var(--ok-soft);
+      color: var(--ok)
+    }
+
+    .slot {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 12px;
+      color: var(--muted)
+    }
+
+    .slot i {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%
+    }
+
+    .slot.morning i {
+      background: var(--s-m)
+    }
+
+    .slot.afternoon i {
+      background: var(--s-a)
+    }
+
+    .slot.evening i {
+      background: var(--s-e)
+    }
+
+    .sumcard {
+      margin: 0 16px 12px;
+      background: var(--surface);
+      border-radius: 22px;
+      padding: 14px;
+      box-shadow: var(--sh);
+      display: flex;
+      flex-direction: column;
+      gap: 10px
+    }
+
+    .sumrow {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px
+    }
+
+    .big {
+      font-size: 26px;
+      font-weight: 800;
+      font-variant-numeric: tabular-nums;
+      letter-spacing: -.01em
+    }
+
+    .delta {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--ok)
+    }
+
+    .mbar {
+      display: flex;
+      align-items: flex-end;
+      gap: 8px;
+      height: 64px
+    }
+
+    .mbar div {
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 3px;
+      height: 100%;
+      font-size: 10.5px;
+      color: var(--muted);
+      font-variant-numeric: tabular-nums
+    }
+
+    .mbar div i {
+      display: block;
+      width: 100%;
+      border-radius: 8px 8px 3px 3px;
+      opacity: .55
+    }
+
+    .mbar div.cur i {
+      opacity: 1
+    }
+
+    .mbar div.cur {
+      color: var(--fg);
+      font-weight: 700
+    }
+
+    .whyrow {
+      display: grid;
+      grid-template-columns: 76px minmax(0, 1fr);
+      gap: 8px;
+      font-size: 12.5px;
+      padding: 7px 0;
+      border-top: 1px solid var(--line);
+      line-height: 1.4
+    }
+
+    .whyrow:first-of-type {
+      border-top: 0
+    }
+
+    .whyrow>span:first-child {
+      color: var(--muted);
+      font-size: 11.5px;
+      font-weight: 600
+    }
+
+    .pc {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 12.5px;
+      line-height: 1.4
+    }
+
+    .pc .pill {
+      flex: none
+    }
+
+    .pcbtns {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      margin-top: 10px
+    }
+
+    .pcbtns button {
+      height: 32px;
+      padding: 0 12px;
+      border-radius: 999px;
+      background: var(--surface2);
+      font-size: 12px;
+      font-weight: 700
+    }
+
+    .pcbtns button.main {
+      background: var(--brand-soft);
+      color: var(--brand-text)
+    }
+
+    .alertbar {
+      display: flex;
+      gap: 10px;
+      align-items: flex-start;
+      background: var(--warn-soft);
+      color: var(--warn);
+      border-radius: 16px;
+      padding: 10px 12px;
+      font-size: 12.5px;
+      font-weight: 600;
+      margin-bottom: 14px;
+      line-height: 1.4
+    }
+
+    .alertbar.ok {
+      background: var(--ok-soft);
+      color: var(--ok)
+    }
+
+    .noteeff {
+      font-size: 11.5px;
+      color: var(--muted)
+    }
+
+    .noteeff b {
+      font-variant-numeric: tabular-nums
+    }
+
+    .pin {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px
+    }
+
+    .subh {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--muted);
+      margin: 14px 0 8px
+    }
+
+    .glass .mapview .maptitle {
+      font-size: 12.5px
+    }
+
+    @media (max-width:440px) {
+      .panel {
+        padding: 14px
+      }
+    }
+
+    .mapchip {
+      white-space: nowrap
+    }
+
+    /* ---- v3: detailed map, full-screen map, accordions ---- */
+    :root {
+      --map-bld: #E7E0DA;
+      --map-cas: #DDD4CE;
+      --map-art: #FFF7E8;
+      --map-artcas: #E9D9B6
+    }
+
+    @media (prefers-color-scheme:dark) {
+      :root:not([data-theme="light"]) {
+        --map-bld: #27221F;
+        --map-cas: #15110F;
+        --map-art: #3A322B;
+        --map-artcas: #0F0C0B
+      }
+    }
+
+    :root[data-theme="dark"] {
+      --map-bld: #27221F;
+      --map-cas: #15110F;
+      --map-art: #3A322B;
+      --map-artcas: #0F0C0B
+    }
+
+    .mapbox {
+      touch-action: none
+    }
+
+    .mapsvg {
+      display: block;
+      width: 100%;
+      height: 100%;
+      touch-action: none;
+      cursor: grab;
+      user-select: none;
+      -webkit-user-select: none
+    }
+
+    .mapsvg:active {
+      cursor: grabbing
+    }
+
+    .mapbox.full {
+      position: absolute;
+      inset: 0;
+      height: auto;
+      margin: 0;
+      z-index: 12
+    }
+
+    .mapbox.full~.sheet,
+    .mapbox.full~.foot {
+      display: none
+    }
+
+    .mctl {
+      position: absolute;
+      right: 12px;
+      top: 100px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      z-index: 5
+    }
+
+    .mctl button {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: var(--surface);
+      color: var(--fg);
+      box-shadow: var(--sh);
+      display: grid;
+      place-items: center
+    }
+
+    .mctl button.on {
+      background: var(--brand);
+      color: #fff
+    }
+
+    .fullonly {
+      display: none !important
+    }
+
+    .mapbox.full .fullonly {
+      display: grid !important
+    }
+
+    .mapbox.full .fullonly.blk {
+      display: block !important
+    }
+
+    .mscale {
+      position: absolute;
+      left: 12px;
+      bottom: 36px;
+      z-index: 4;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+      font-size: 10.5px;
+      font-weight: 700;
+      color: var(--fg);
+      pointer-events: none;
+      text-shadow: 0 0 4px var(--map-land), 0 0 4px var(--map-land)
+    }
+
+    .mscale i {
+      display: block;
+      height: 5px;
+      border: 2px solid var(--fg);
+      border-top: 0;
+      width: 60px
+    }
+
+    .mapbox.full .mscale {
+      bottom: 206px
+    }
+
+    .fullcard {
+      position: absolute;
+      left: 12px;
+      right: 12px;
+      bottom: 12px;
+      background: var(--surface);
+      border-radius: 24px;
+      box-shadow: 0 14px 34px -10px rgba(60, 30, 20, .4);
+      padding: 12px 14px;
+      z-index: 6
+    }
+
+    .fullcard .t1 {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px
+    }
+
+    .fullcard h3 {
+      margin: 0;
+      font-size: 15px;
+      font-weight: 800;
+      min-width: 0;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis
+    }
+
+    .fullcard .sub {
+      margin: 2px 0 10px
+    }
+
+    .fullcard .row2 {
+      display: flex;
+      gap: 8px
+    }
+
+    .legend2 {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px 12px;
+      font-size: 10.5px;
+      color: var(--muted);
+      margin-top: 10px
+    }
+
+    .legend2 span {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px
+    }
+
+    .legend2 i {
+      display: inline-block;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%
+    }
+
+    .legend2 i.zone {
+      border-radius: 3px;
+      border: 1.5px dashed var(--s-m);
+      background: transparent
+    }
+
+    .legend2 i.jam {
+      border-radius: 2px;
+      height: 4px;
+      width: 14px;
+      background: var(--bad)
+    }
+
+    .mapsvg .mlabel {
+      display: none;
+      pointer-events: none
+    }
+
+    .mapsvg.zoomed .mlabel {
+      display: block
+    }
+
+    .mapsvg .slabel {
+      display: none;
+      pointer-events: none
+    }
+
+    .mapsvg.zoomed .slabel {
+      display: block
+    }
+
+    .mapsvg.nozones .zones {
+      display: none
+    }
+
+    .mkr {
+      cursor: pointer
+    }
+
+    .flow {
+      animation: flow 1.1s linear infinite
+    }
+
+    @keyframes flow {
+      to {
+        stroke-dashoffset: -24
+      }
+    }
+
+    .jam {
+      animation: flow 2.6s linear infinite
+    }
+
+    .hz {
+      transform-box: fill-box;
+      transform-origin: center;
+      animation: hz 1.3s ease-out infinite
+    }
+
+    @keyframes hz {
+      0% {
+        opacity: .7;
+        transform: scale(.6)
+      }
+
+      100% {
+        opacity: 0;
+        transform: scale(2.3)
+      }
+    }
+
+    .acc {
+      background: var(--surface);
+      border-radius: 22px;
+      box-shadow: var(--sh);
+      margin: 6px 0 14px;
+      overflow: hidden
+    }
+
+    .acc summary {
+      list-style: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 14px;
+      font-weight: 700;
+      font-size: 14px
+    }
+
+    .acc summary::-webkit-details-marker {
+      display: none
+    }
+
+    .acc summary small {
+      display: block;
+      font-weight: 500;
+      color: var(--muted);
+      font-size: 12px;
+      margin-top: 2px
+    }
+
+    .acc .chev {
+      transition: transform .2s;
+      flex: none;
+      color: var(--muted)
+    }
+
+    .acc[open] .chev {
+      transform: rotate(90deg)
+    }
+
+    .acc .accbody {
+      padding: 0 14px 14px
+    }
+
+    .acc summary:focus-visible {
+      outline: 2px solid var(--brand);
+      outline-offset: -2px;
+      border-radius: 22px
+    }
+
+    .alertbar svg,
+    .banner svg {
+      flex: none
+    }
+  </style>
+  <main class="stage">
+    <div class="wrap">
+      <div class="phonecol">
+        <div class="phone">
+          <div class="glass" id="glass">
+            <div class="island"></div>
+            <div class="status" id="status"><span id="clock">15:00</span>
+              <span class="sig"><svg width="17" height="12" viewBox="0 0 17 12" fill="currentColor" aria-hidden="true">
+                  <rect x="0" y="8" width="3" height="4" rx="1" />
+                  <rect x="4.5" y="5.5" width="3" height="6.5" rx="1" />
+                  <rect x="9" y="3" width="3" height="9" rx="1" />
+                  <rect x="13.5" y="0" width="3" height="12" rx="1" />
+                </svg><span class="bat"></span></span>
+            </div>
+            <section class="scr" id="s-orders"></section>
+            <section class="scr mapview" id="s-route" hidden></section>
+            <section class="scr mapview" id="s-detail" hidden></section>
+            <section class="scr" id="s-done" hidden></section>
+            <div class="overlay" id="overlay" hidden></div>
+            <div class="toast" id="toast" hidden></div>
+          </div>
+        </div>
+      </div>
+      <aside class="panel" id="panel" aria-label="Logic layer and test log"></aside>
+    </div>
+  </main>
+
+  <script>
+    (function () {
+      const DATA = { "rules": { "gated_facility|afternoon|wd": [631, 0.8669], "gated_facility|afternoon|we": [229, 0.8559], "gated_facility|evening|wd": [603, 0.8458], "gated_facility|evening|we": [198, 0.7424], "gated_facility|morning|wd": [504, 0.8353], "gated_facility|morning|we": [162, 0.8889], "industrial|afternoon|wd": [56, 0.875], "industrial|afternoon|we": [12, 0.75], "industrial|evening|wd": [48, 0.875], "industrial|evening|we": [21, 0.9524], "industrial|morning|wd": [39, 0.5385], "industrial|morning|we": [9, 0.6667], "office|afternoon|wd": [211, 0.8483], "office|afternoon|we": [63, 0.2698], "office|evening|wd": [208, 0.4904], "office|evening|we": [66, 0.2424], "office|morning|wd": [172, 0.8488], "office|morning|we": [58, 0.2931], "school|afternoon|wd": [713, 0.8205], "school|afternoon|we": [256, 0.5], "school|evening|wd": [699, 0.4149], "school|evening|we": [265, 0.4981], "school|morning|wd": [636, 0.8082], "school|morning|we": [188, 0.8457], "gated_facility|afternoon|all": [860, 0.864], "gated_facility|evening|all": [801, 0.8202], "gated_facility|morning|all": [666, 0.8483], "industrial|afternoon|all": [68, 0.8529], "industrial|evening|all": [69, 0.8986], "industrial|morning|all": [48, 0.5625], "office|afternoon|all": [274, 0.7153], "office|evening|all": [274, 0.4307], "office|morning|all": [230, 0.7087], "school|afternoon|all": [969, 0.7358], "school|evening|all": [964, 0.4378], "school|morning|all": [824, 0.8167], "gated_facility|all|all": [2327, 0.8444], "industrial|all|all": [185, 0.7946], "office|all|all": [778, 0.6131], "school|all|all": [2757, 0.6558], "all|all|all": [6047, 0.7271] }, "locs": { "L0184": { "id": "L0184", "name": "Trường Mầm non Long Bình", "type": "school", "lat": 10.939416, "lng": 106.878674, "n": 433, "fasr": 0.688, "proc": 15.0, "notes": [{ "k": "Bao ve cong chinh", "t": "Guard at the main gate", "n": 83, "last": "15/10", "eff": [748, 0.694] }, { "k": "can dang ky CCCD khi vao <ten>", "t": "ID (CCCD) registration required at entry", "n": 83, "last": "15/10", "eff": [748, 0.694] }, { "k": "Cong phu xe may", "t": "Side gate for motorbikes", "n": 81, "last": "14/10", "eff": [691, 0.698] }, { "k": "oto khong vao duoc", "t": "No car access", "n": 81, "last": "14/10", "eff": [691, 0.698] }, { "k": "Khuon vien co bao ve, gui xe ngoai cong", "t": "Guarded compound, park outside the gate", "n": 75, "last": "15/10", "eff": [717, 0.688] }, { "k": "Nguoi nhan khong ra duoc buoi toi", "t": "Recipient cannot come out in the evening", "n": 74, "last": "15/10", "eff": [392, 0.49] }, { "k": "Bao ve bao chi nhan trong gio hanh chinh", "t": "Guard: parcels accepted in office hours only", "n": 60, "last": "15/10", "eff": [446, 0.453] }, { "k": "Ngoai gio hanh chinh", "t": "Outside office hours", "n": 52, "last": "15/10", "eff": [418, 0.419] }], "ntot": 18, "gpsMissing": 0.206, "en": "Long Binh Kindergarten" }, "L0190": { "id": "L0190", "name": "Trường Tiểu học Phan Đình Phùng", "type": "school", "lat": 10.9404, "lng": 106.874095, "n": 59, "fasr": 0.695, "proc": 18.0, "notes": [{ "k": "Cong phu xe may", "t": "Side gate for motorbikes", "n": 15, "last": "13/10", "eff": [691, 0.698] }, { "k": "oto khong vao duoc", "t": "No car access", "n": 15, "last": "13/10", "eff": [691, 0.698] }, { "k": "Bao ve bao chi nhan trong gio hanh chinh", "t": "Guard: parcels accepted in office hours only", "n": 11, "last": "05/10", "eff": [446, 0.453] }, { "k": "Bao ve cong chinh", "t": "Guard at the main gate", "n": 10, "last": "10/10", "eff": [748, 0.694] }, { "k": "can dang ky CCCD khi vao <ten>", "t": "ID (CCCD) registration required at entry", "n": 10, "last": "10/10", "eff": [748, 0.694] }, { "k": "Ngoai gio hanh chinh", "t": "Outside office hours", "n": 10, "last": "30/09", "eff": [418, 0.419] }, { "k": "le tan da ve", "t": "Receptionist has left", "n": 10, "last": "30/09", "eff": [418, 0.419] }, { "k": "De o quay bao ve, goi buyer xuong nhan", "t": "Leave at guard desk, call recipient to collect", "n": 9, "last": "08/10", "eff": [558, 0.778] }], "ntot": 18, "gpsMissing": 0.165, "en": "Phan Dinh Phung Primary School" }, "L0182": { "id": "L0182", "name": "Công đoàn Khu công nghiệp Biên Hoà", "type": "office", "lat": 10.93502, "lng": 106.8719735, "n": 54, "fasr": 0.556, "proc": 15.0, "notes": [{ "k": "Le tan nghi cuoi tuan", "t": "Reception off on weekends", "n": 13, "last": "11/10", "eff": [77, 0.234] }, { "k": "Ngoai gio hanh chinh", "t": "Outside office hours", "n": 12, "last": "15/10", "eff": [418, 0.419] }, { "k": "le tan da ve", "t": "Receptionist has left", "n": 12, "last": "15/10", "eff": [418, 0.419] }, { "k": "Cong phu xe may", "t": "Side gate for motorbikes", "n": 11, "last": "11/10", "eff": [691, 0.698] }, { "k": "oto khong vao duoc", "t": "No car access", "n": 11, "last": "11/10", "eff": [691, 0.698] }, { "k": "Cuoi tuan van phong dong", "t": "Office closed on weekends", "n": 9, "last": "04/10", "eff": [87, 0.184] }, { "k": "khong co nguoi nhan", "t": "No one to receive", "n": 9, "last": "04/10", "eff": [87, 0.184] }, { "k": "Diem ban giao: sanh chinh", "t": "Handover point: main lobby", "n": 9, "last": "06/10", "eff": [512, 0.777] }], "ntot": 22, "gpsMissing": 0.153, "en": "Bien Hoa Industrial Zone Labor Union" }, "L0183": { "id": "L0183", "name": "Đồn Công an Khu công nghiệp Biên Hòa", "type": "office", "lat": 10.935398, "lng": 106.871225, "n": 49, "fasr": 0.796, "proc": 18.0, "notes": [{ "k": "Ban giao tai le tan tang 1", "t": "Hand over at ground-floor reception", "n": 10, "last": "13/10", "eff": [558, 0.772] }, { "k": "Bao ve cong chinh", "t": "Guard at the main gate", "n": 9, "last": "11/10", "eff": [748, 0.694] }, { "k": "can dang ky CCCD khi vao <ten>", "t": "ID (CCCD) registration required at entry", "n": 9, "last": "11/10", "eff": [748, 0.694] }, { "k": "Ngoai gio hanh chinh", "t": "Outside office hours", "n": 8, "last": "13/10", "eff": [418, 0.419] }, { "k": "le tan da ve", "t": "Receptionist has left", "n": 8, "last": "13/10", "eff": [418, 0.419] }, { "k": "Nguoi nhan khong co mat luc toi diem", "t": "Recipient not present on arrival", "n": 7, "last": "11/10", "eff": [147, 0.51] }, { "k": "Diem ban giao: sanh chinh", "t": "Handover point: main lobby", "n": 7, "last": "11/10", "eff": [512, 0.777] }, { "k": "Nguoi nhan khong ra duoc buoi toi", "t": "Recipient cannot come out in the evening", "n": 6, "last": "07/10", "eff": [392, 0.49] }], "ntot": 17, "gpsMissing": 0.246, "en": "Bien Hoa Industrial Zone Police Station" }, "L0188": { "id": "L0188", "name": "Văn phòng Khu phố 4", "type": "gated_facility", "lat": 10.941825, "lng": 106.871503, "n": 65, "fasr": 0.846, "proc": 12.0, "notes": [{ "k": "Bao ve cong chinh", "t": "Guard at the main gate", "n": 13, "last": "11/10", "eff": [748, 0.694] }, { "k": "can dang ky CCCD khi vao <ten>", "t": "ID (CCCD) registration required at entry", "n": 13, "last": "11/10", "eff": [748, 0.694] }, { "k": "Cong phu xe may", "t": "Side gate for motorbikes", "n": 11, "last": "15/10", "eff": [691, 0.698] }, { "k": "oto khong vao duoc", "t": "No car access", "n": 11, "last": "15/10", "eff": [691, 0.698] }, { "k": "Ban giao tai le tan tang 1", "t": "Hand over at ground-floor reception", "n": 9, "last": "14/10", "eff": [558, 0.772] }, { "k": "Khuon vien co bao ve, gui xe ngoai cong", "t": "Guarded compound, park outside the gate", "n": 7, "last": "14/10", "eff": [717, 0.688] }, { "k": "Nhan sau 17:00 khi tan ca", "t": "Pick-up after 17:00 when the shift ends", "n": 5, "last": "07/10", "eff": [273, 0.725] }, { "k": "Diem ban giao: sanh chinh", "t": "Handover point: main lobby", "n": 5, "last": "11/10", "eff": [512, 0.777] }], "ntot": 12, "gpsMissing": 0.117, "en": "Neighborhood 4 Office" }, "L0185": { "id": "L0185", "name": "Công ty Cổ phần Bia Sài Gòn - Đồng Nai", "type": "industrial", "lat": 10.952637, "lng": 106.874456, "n": 70, "fasr": 0.771, "proc": 15.0, "notes": [{ "k": "Cong phu xe may", "t": "Side gate for motorbikes", "n": 15, "last": "14/10", "eff": [691, 0.698] }, { "k": "oto khong vao duoc", "t": "No car access", "n": 15, "last": "14/10", "eff": [691, 0.698] }, { "k": "Bao ve cong chinh", "t": "Guard at the main gate", "n": 11, "last": "07/10", "eff": [748, 0.694] }, { "k": "can dang ky CCCD khi vao <ten>", "t": "ID (CCCD) registration required at entry", "n": 11, "last": "07/10", "eff": [748, 0.694] }, { "k": "Khuon vien co bao ve, gui xe ngoai cong", "t": "Guarded compound, park outside the gate", "n": 10, "last": "15/10", "eff": [717, 0.688] }, { "k": "Diem ban giao: sanh chinh", "t": "Handover point: main lobby", "n": 9, "last": "10/10", "eff": [512, 0.777] }, { "k": "De o quay bao ve, goi buyer xuong nhan", "t": "Leave at guard desk, call recipient to collect", "n": 8, "last": "07/10", "eff": [558, 0.778] }, { "k": "Nguoi nhan khong co mat luc toi diem", "t": "Recipient not present on arrival", "n": 8, "last": "11/10", "eff": [147, 0.51] }], "ntot": 14, "gpsMissing": 0.148, "en": "Sai Gon Beer – Dong Nai Plant" }, "L0191": { "id": "L0191", "name": "Trường Trung học cơ sở Hoàng Văn Thụ", "type": "school", "lat": 10.95157, "lng": 106.875974, "n": 62, "fasr": 0.694, "proc": 15.0, "notes": [{ "k": "Cong phu xe may", "t": "Side gate for motorbikes", "n": 14, "last": "15/10", "eff": [691, 0.698] }, { "k": "oto khong vao duoc", "t": "No car access", "n": 14, "last": "15/10", "eff": [691, 0.698] }, { "k": "Nguoi nhan khong ra duoc buoi toi", "t": "Recipient cannot come out in the evening", "n": 13, "last": "09/10", "eff": [392, 0.49] }, { "k": "Bao ve cong chinh", "t": "Guard at the main gate", "n": 11, "last": "10/10", "eff": [748, 0.694] }, { "k": "can dang ky CCCD khi vao <ten>", "t": "ID (CCCD) registration required at entry", "n": 11, "last": "10/10", "eff": [748, 0.694] }, { "k": "Khuon vien co bao ve, gui xe ngoai cong", "t": "Guarded compound, park outside the gate", "n": 11, "last": "09/10", "eff": [717, 0.688] }, { "k": "Ngoai gio hanh chinh", "t": "Outside office hours", "n": 10, "last": "07/10", "eff": [418, 0.419] }, { "k": "le tan da ve", "t": "Receptionist has left", "n": 10, "last": "07/10", "eff": [418, 0.419] }], "ntot": 18, "gpsMissing": 0.146, "en": "Hoang Van Thu Secondary School" } }, "stops": [{ "oid": "O00147", "loc": "L0184", "buyer": "B0184", "pay": "prepaid", "parcel": "bulky", "addr": "Trường Mầm non Long Bình Building / tang 10 – nguoi nhan o le tan", "gpsOrder": true, "proc": 12.0 }, { "oid": "O00146", "loc": "L0190", "buyer": "B0190", "pay": "cod", "parcel": "standard", "addr": "Truong Teu hoc Phan Đinh Phung", "gpsOrder": true, "proc": 12.0 }, { "oid": "O00175", "loc": "L0182", "buyer": "B0182", "pay": "prepaid", "parcel": "standard", "addr": "Công ty TNHH YKK Việt Nam, 104-106-108, Đường Amata, Long Bình, Biên Hòa", "gpsOrder": true, "proc": 30.0 }, { "oid": "O00149", "loc": "L0183", "buyer": "B0183", "pay": "prepaid", "parcel": "standard", "addr": "Đồn Công an Khu công nghiệp Biên Hòa, gan Long Bình, Biên Hòa", "gpsOrder": true, "proc": 22.0 }, { "oid": "O00159", "loc": "L0188", "buyer": "B0188", "pay": "cod", "parcel": "standard", "addr": "Văn phòng Khu phố 4 – nhan o cong chinh", "gpsOrder": true, "proc": 22.0 }, { "oid": "O00152", "loc": "L0185", "buyer": "B0185", "pay": "cod", "parcel": "documents", "addr": "Công ty Cổ phần Bia Sài Gòn - Đồng Nai", "gpsOrder": true, "proc": 30.0 }, { "oid": "O00145", "loc": "L0191", "buyer": "B0191", "pay": "prepaid", "parcel": "standard", "addr": "Doi dien Trường Trung học cơ sở Hoàng Văn Thụ, hoi bao ve", "gpsOrder": false, "proc": 25.0 }], "chart": { "school|morning": [824, 0.8167], "school|afternoon": [969, 0.7358], "school|evening": [964, 0.4378], "office|morning": [230, 0.7087], "office|afternoon": [274, 0.7153], "office|evening": [274, 0.4307], "gated_facility|morning": [666, 0.8483], "gated_facility|afternoon": [860, 0.864], "gated_facility|evening": [801, 0.8202], "industrial|morning": [48, 0.5625], "industrial|afternoon": [68, 0.8529], "industrial|evening": [69, 0.8986] }, "eff": { "Bảo vệ cổng chính": [748, 0.694], "Cần đăng ký CCCD khi vào": [748, 0.694], "Cổng phụ cho xe máy": [691, 0.698], "Ô tô không vào được": [691, 0.698], "Khuôn viên có bảo vệ, gửi xe ngoài cổng": [717, 0.688], "Bàn giao tại lễ tân tầng 1": [558, 0.772], "Để ở quầy bảo vệ, gọi người nhận xuống nhận": [558, 0.778], "Điểm bàn giao: sảnh chính": [512, 0.777], "Bảo vệ báo chỉ nhận trong giờ hành chính": [446, 0.453], "Ngoài giờ hành chính": [418, 0.419], "Lễ tân đã về": [418, 0.419], "Người nhận không ra được buổi tối": [392, 0.49], "Văn phòng nghỉ 12:00–13:30": [333, 0.727], "Chỉ nhận hàng 11:30–13:00 (ca trưa)": [293, 0.7], "Nhận sau 17:00 khi tan ca": [273, 0.725], "Không đúng cửa sổ nhận hàng của điểm": [154, 0.5], "Người nhận không có mặt lúc tới điểm": [147, 0.51], "Cuối tuần văn phòng đóng": [87, 0.184], "Không có người nhận": [87, 0.184], "Lễ tân nghỉ cuối tuần": [77, 0.234], "Ngày campaign: hàng đợi ở cổng": [68, 0.618], "Lễ tân nghỉ": [23, 0.174], "Bảo vệ báo người nhận không có mặt": [23, 0.174] }, "meta": { "date": "01/09/2026", "orders": 6047, "rows": 8059, "riders": 6, "days": 45, "fasr": 0.7271, "redel": 0.264, "avgAtt": 1.333, "gpsMissing": 0.203 } };
+      const $ = (s, r = document) => r.querySelector(s);
+      const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+      const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+      const pct = (x, d = 0) => (x * 100).toFixed(d) + '%';
+      const dec = (x, d = 1) => x.toFixed(d);
+      const num = n => n.toLocaleString('en-US');
+      const hm = m => { m = Math.round(m); const h = Math.floor(m / 60) % 24, mi = ((m % 60) + 60) % 60; return String(h).padStart(2, '0') + ':' + String(mi).padStart(2, '0'); };
+      const ICON = {
+        package: 'M11 21.7a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16V8a2 2 0 0 0-1-1.7l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.7z M12 22V12 M3.3 7 12 12l8.7-5 M7.5 4.3l9 5.2',
+        map: 'M3 6l6-2 6 2 6-2v14l-6 2-6-2-6 2z M9 4v14 M15 6v14',
+        wallet: 'M19 7V4a1 1 0 0 0-1-1H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v4h-3a2 2 0 0 0 0 4h3a1 1 0 0 0 1-1v-2 M3 5v14a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-4',
+        user: 'M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2 M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8',
+        bell: 'M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9 M10.3 21a1.9 1.9 0 0 0 3.4 0',
+        search: 'M11 19a8 8 0 1 0 0-16 8 8 0 0 0 0 16 M21 21l-4.3-4.3',
+        phone: 'M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 1.9.7 2.8a2 2 0 0 1-.5 2.1L8.1 9.9a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.8.7a2 2 0 0 1 1.7 2z',
+        chat: 'M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z',
+        nav: 'M3 11l19-9-9 19-2-8z',
+        star: 'M12 2l3.1 6.3 6.9 1-5 4.9 1.2 6.8L12 17.8 5.8 21l1.2-6.8-5-4.9 6.9-1z',
+        mic: 'M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z M19 10v2a7 7 0 0 1-14 0v-2 M12 19v3',
+        camera: 'M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3z M12 17a4 4 0 1 0 0-8 4 4 0 0 0 0 8',
+        check: 'M20 6 9 17l-5-5',
+        x: 'M18 6 6 18 M6 6l12 12',
+        alert: 'M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z M12 9v4 M12 17h.01',
+        clock: 'M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20 M12 6v6l4 2',
+        pin: 'M20 10c0 6-8 12-8 12S4 16 4 10a8 8 0 0 1 16 0 M12 13a3 3 0 1 0 0-6 3 3 0 0 0 0 6',
+        wand: 'M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z M19 16l.9 2.1L22 19l-2.1.9L19 22l-.9-2.1L16 19l2.1-.9z',
+        trash: 'M3 6h18 M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6 M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2',
+        left: 'M15 18l-6-6 6-6',
+        right: 'M9 18l6-6-6-6',
+        up: 'M7 10v12 M15 5.9 14 10h5.8a2 2 0 0 1 1.9 2.5l-2.3 8A2 2 0 0 1 17.5 22H4a2 2 0 0 1-2-2v-8a2 2 0 0 1 2-2h2.8a2 2 0 0 0 1.8-1.1L12 2a3.1 3.1 0 0 1 3 3.9z',
+        down: 'M17 14V2 M9 18.1 10 14H4.2a2 2 0 0 1-1.9-2.5l2.3-8A2 2 0 0 1 6.5 2H20a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2h-2.8a2 2 0 0 0-1.8 1.1L12 22a3.1 3.1 0 0 1-3-3.9z',
+        shield: 'M20 13c0 5-3.5 7.5-7.7 8.9a1 1 0 0 1-.6 0C7.5 20.500 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.2-2.7a1.2 1.2 0 0 1 1.6 0C14.5 3.8 17 5 19 5a1 1 0 0 1 1 1z',
+        bolt: 'M13 2 3 14h9l-1 8 10-12h-9z',
+        plus: 'M12 5v14 M5 12h14',
+        cash: 'M2 6h20v12H2z M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6',
+        home: 'M3 11l9-8 9 8 M5 10v10h14V10',
+        refresh: 'M21 12a9 9 0 0 1-15.5 6.2L3 16 M3 12a9 9 0 0 1 15.5-6.2L21 8 M21 3v5h-5 M3 21v-5h5'
+      };
+
+      Object.assign(ICON, { minus: 'M5 12h14', expand: 'M8 3H5a2 2 0 0 0-2 2v3 M21 8V5a2 2 0 0 0-2-2h-3 M3 16v3a2 2 0 0 0 2 2h3 M16 21h3a2 2 0 0 0 2-2v-3', shrink: 'M8 3v3a2 2 0 0 1-2 2H3 M21 8h-3a2 2 0 0 1-2-2V3 M3 16h3a2 2 0 0 1 2 2v3 M16 21v-3a2 2 0 0 1 2-2h3', target: 'M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20 M12 16a4 4 0 1 0 0-8 4 4 0 0 0 0 8', layers: 'M12 2 2 7l10 5 10-5z M2 17l10 5 10-5 M2 12l10 5 10-5', school: 'M22 10 12 5 2 10l10 5z M6 12v5c3 2 9 2 12 0v-5', factory: 'M2 20V8l6 4V8l6 4V4h4v16z', office: 'M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18z M10 6h4 M10 10h4 M10 14h4' });
+      const ic = (n, s = 18) => { const d = ICON[n].split(' M').map((p, i) => `<path d="${i ? 'M' + p : p}"/>`).join(''); return `<svg class="ic" width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${d}</svg>`; };
+
+      /* ================= Logic layer (rule table comes from the dataset) ================= */
+      const R = DATA.rules;
+      const TH = { red: .60, amber: .75, minN: 30, gain: .10, pen: .05 };
+      const SPEED = 20, ROAD = 1.3, HUB = [10.9462, 106.8806];
+      const TYPE_L = { school: 'School', office: 'Agency / office', gated_facility: 'Gated facility', industrial: 'Industrial zone / factory' };
+      const TYPE_S = { school: 'School', office: 'Agency', gated_facility: 'Gated site', industrial: 'Industrial' };
+      const TYPE_I = { school: 'school', office: 'office', gated_facility: 'shield', industrial: 'factory' };
+      const SLOT = { morning: 'Morning', afternoon: 'Afternoon', evening: 'Evening' };
+      const PAR = { standard: 'Standard', bulky: 'Bulky', fragile: 'Fragile', documents: 'Documents' };
+      const slotOf = m => m < 720 ? 'morning' : m < 1020 ? 'afternoon' : 'evening';
+      function lk(type, slot, dt) {
+        let k = type + '|' + slot + '|' + dt, v = R[k];
+        if (v && v[0] >= TH.minN) return { p: v[1], n: v[0], src: 'site type × time slot × day', fb: 0 };
+        k = type + '|' + slot + '|all'; v = R[k];
+        if (v && v[0] >= TH.minN) return { p: v[1], n: v[0], src: 'fallback: site type × time slot (all days)', fb: 1 };
+        v = R[type + '|all|all'];
+        return { p: v[1], n: v[0], src: 'fallback: site type only', fb: 2 };
+      }
+      const rk = p => p < TH.red ? 'red' : p < TH.amber ? 'amber' : 'green';
+      const RKL = { red: 'High risk', amber: 'Caution', green: 'Good' };
+
+      const CONF0 = ['confirmed', 'none', 'pending', 'none', 'confirmed', 'none', 'none'];
+      const S = DATA.stops.map((o, i) => { const l = DATA.locs[o.loc]; return { id: 's' + (i + 1), oid: o.oid, loc: l, type: l.type, name: l.en, pos: [l.lat, l.lng], pay: o.pay, parcel: o.parcel, addr: o.addr, gpsOrder: o.gpsOrder, svc: o.proc == null ? l.proc : o.proc, buyer: o.buyer }; });
+      const byId = Object.fromEntries(S.map(s => [s.id, s]));
+      const hav = (a, b) => { const r = Math.PI / 180, dl = (b[0] - a[0]) * r, dg = (b[1] - a[1]) * r; const x = Math.sin(dl / 2) ** 2 + Math.cos(a[0] * r) * Math.cos(b[0] * r) * Math.sin(dg / 2) ** 2; return 12742 * Math.asin(Math.sqrt(x)); };
+      const posOf = id => id === 'hub' ? HUB : byId[id].pos;
+      const DC = {}; const D = (a, b) => { const k = a + '>' + b; if (DC[k] == null) DC[k] = hav(posOf(a), posOf(b)) * ROAD; return DC[k]; };
+
+      let st;
+      function resetDraft() { st.draft = { reason: '', cod: false, pod: null, photo: null, star: false, voice: false, delId: null, delReason: '', recording: false }; }
+      let MAPS = {};
+      function init() {
+        st = {
+          screen: 'orders', dt: 'wd', start: 960, clock: 960, pos: 'hub', optimized: false, done: {}, failed: {}, moved: {}, force: {}, active: 's1', filter: 'all', xp: 340, lvl: 4, earned: [], leveled: false,
+          conf: Object.fromEntries(S.map((s, i) => [s.id, CONF0[i]])), notes: {}, votes: {}, alert: null, tab: 'logic', late12: true, incident: null
+        };
+        S.forEach(s => { st.notes[s.id] = s.loc.notes.map((n, i) => ({ id: s.id + 'n' + i, t: n.t, n: n.n, last: n.last, eff: n.eff, star: !!(n.eff && n.eff[1] <= .62 && n.eff[0] >= 100), ok: n.n, bad: 0, photo: null, mine: false })); });
+        MAPS = {}; resetDraft();
+      }
+      const remaining = () => S.filter(s => !st.done[s.id] && !st.failed[s.id] && !st.moved[s.id]).map(s => s.id);
+      function etaList(order, t0, from) { let t = t0, at = from, res = [], tot = 0; for (const id of order) { const d = D(at, id); t += d / SPEED * 60; res.push({ id, eta: Math.round(t), km: d }); tot += d; t += byId[id].svc; at = id; } return { e: res, km: tot, end: Math.round(t) }; }
+      function perms(a) { if (a.length <= 1) return [a.slice()]; const out = []; a.forEach((x, i) => { const rest = a.slice(0, i).concat(a.slice(i + 1)); perms(rest).forEach(p => out.push([x].concat(p))); }); return out; }
+      function scoreOrder(order, t0, from, dt) { const r = etaList(order, t0, from); let sc = 0; r.e.forEach(x => { sc += lk(byId[x.id].type, slotOf(x.eta), dt).p; }); return { r, sc }; }
+      function bestOrder(ids, t0, from, dt) { let best = null; for (const pm of perms(ids)) { const s = scoreOrder(pm, t0, from, dt); const v = s.sc - 0.002 * s.r.km; if (!best || v > best.v) best = { v, pm, r: s.r, sc: s.sc }; } return best; }
+      function nearest(ids, from) { const left = ids.slice(), out = []; let at = from; while (left.length) { let bi = 0; left.forEach((id, i) => { if (D(at, id) < D(at, left[bi])) bi = i; }); out.push(left[bi]); at = left[bi]; left.splice(bi, 1); } return out; }
+      const pMorn = type => lk(type, 'morning', 'wd');
+      function makeBase() { const ids = remaining(); const order = nearest(ids, st.pos); const r = etaList(order, st.clock, st.pos); let sc = 0; r.e.forEach(x => { sc += lk(byId[x.id].type, slotOf(x.eta), st.dt).p; }); return { kind: 'base', order, e: r.e, km: r.km, end: r.end, deferred: [], exp: ids.length ? sc / ids.length : 0, n: ids.length }; }
+      let planCache = {};
+      function makePlan() {
+        const ids = remaining(); const key = [ids.join(), st.clock, st.pos, st.dt, Object.keys(st.force).join()].join('|');
+        if (planCache[key]) return planCache[key];
+        let active = ids.slice(), deferred = [];
+        let best = active.length ? bestOrder(active, st.clock, st.pos, st.dt) : null;
+        while (best) {
+          let cand = null;
+          best.r.e.forEach(x => { const s = byId[x.id]; if (st.force[x.id]) return; const p = lk(s.type, slotOf(x.eta), st.dt).p; const pd = pMorn(s.type).p - TH.pen; if (p < TH.red && pd - p >= TH.gain && (!cand || p < cand.p)) cand = { id: x.id, p }; });
+          if (!cand) break;
+          deferred.push(cand.id); active = active.filter(i => i !== cand.id); best = active.length ? bestOrder(active, st.clock, st.pos, st.dt) : null;
+        }
+        const e = best ? best.r.e : []; let sc = 0; e.forEach(x => { sc += lk(byId[x.id].type, slotOf(x.eta), st.dt).p; }); deferred.forEach(id => { sc += pMorn(byId[id].type).p; });
+        const res = { kind: 'plan', order: best ? best.pm : [], e, km: best ? best.r.km : 0, end: best ? best.r.end : st.clock, deferred, exp: ids.length ? sc / ids.length : 0, n: ids.length };
+        planCache = { [key]: res }; return res;
+      }
+      const view = () => st.optimized ? makePlan() : makeBase();
+      function infoMap(v) {
+        const m = {};
+        v.e.forEach((x, i) => { const s = byId[x.id]; const slot = slotOf(x.eta); const l = lk(s.type, slot, st.dt); m[x.id] = { idx: i + 1, eta: x.eta, slot, p: l.p, n: l.n, src: l.src, fb: l.fb, deferred: false }; });
+        (v.deferred || []).forEach(id => { const s = byId[id]; const l = pMorn(s.type); m[id] = { idx: null, eta: 8 * 60 + 30, slot: 'morning', p: l.p, n: l.n, src: l.src, fb: l.fb, deferred: true }; });
+        return m;
+      }
+      function evalKeep(old) {
+        const r = etaList(old.order, st.clock, st.pos); let sc = 0; r.e.forEach(x => { sc += lk(byId[x.id].type, slotOf(x.eta), st.dt).p; }); (old.deferred || []).forEach(id => { sc += pMorn(byId[id].type).p; });
+        const n = old.order.length + (old.deferred || []).length; return n ? sc / n : 0;
+      }
+
+      /* ================= UI helpers ================= */
+      const render = {};
+      let toastT;
+      function toast(m) { const t = $('#toast'); t.textContent = m; t.hidden = false; t.style.animation = 'none'; void t.offsetWidth; t.style.animation = ''; clearTimeout(toastT); toastT = setTimeout(() => t.hidden = true, 2600); }
+      const lvName = l => l < 3 ? 'Rookie' : l < 5 ? 'Silver Rider' : l < 8 ? 'Gold Rider' : 'Diamond Rider';
+      function addXP(n, label) { st.xp += n; st.earned.push({ label, xp: n }); while (st.xp >= 500) { st.xp -= 500; st.lvl++; st.leveled = true; } toast('+' + n + ' XP · ' + label); }
+      function overlay(html, cls = '') { const o = $('#overlay'); o.innerHTML = '<div class="osheet ' + cls + '">' + html + '</div>'; o.hidden = false; }
+      function closeOverlay() { $('#overlay').hidden = true; }
+      function navHTML(active) {
+        const it = [['orders', 'package', 'Orders'], ['route', 'map', 'Route'], ['income', 'wallet', 'Earnings'], ['me', 'user', 'Profile']];
+        return '<nav class="nav" aria-label="Navigation">' + it.map(([k, i, l]) => `<button data-act="nav" data-v="${k}" class="${k === active ? 'on' : ''}" ${k === active ? 'aria-current="page"' : ''}>${ic(i, 22)}<span>${l}</span></button>`).join('') + '</nav>';
+      }
+      const dayTxt = () => st.dt === 'wd' ? 'Tue 01 Sep' : 'Sat 05 Sep';
+      function rkPill(p) { const c = rk(p); return `<span class="rk ${c}">${RKL[c]} · ${pct(p)}</span>`; }
+      function slotTag(slot, eta) { return `<span class="slot ${slot}"><i></i>${SLOT[slot]}${eta != null ? ' · ' + hm(eta) : ''}</span>`; }
+      function acc(title, sub, body, open) { return `<details class="acc" ${open ? 'open' : ''}><summary><span>${title}${sub ? `<small>${sub}</small>` : ''}</span><span class="chev">${ic('right', 18)}</span></summary><div class="accbody">${body}</div></details>`; }
+
+      /* ================= Detailed map (illustrative street network built around real dataset coordinates) ================= */
+      const KMPX = 420;
+      const PTS = [HUB].concat(S.map(s => s.pos));
+      const LAT1 = Math.max(...PTS.map(p => p[0])), LNG0 = Math.min(...PTS.map(p => p[1]));
+      const KX = 111.32 * Math.cos(10.94 * Math.PI / 180) * KMPX, KY = 110.57 * KMPX;
+      const WP = p => [(p[1] - LNG0) * KX, (LAT1 - p[0]) * KY];
+      const wp = id => WP(posOf(id));
+      function rng(seed) { let a = seed >>> 0; return () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+      let BASE = null;
+      function buildBase() {
+        if (BASE) return BASE;
+        const R_ = rng(20260901);
+        const nodes = PTS.map(WP);
+        const xs0 = nodes.map(p => p[0]), ys0 = nodes.map(p => p[1]);
+        const M = 260, minX = Math.min(...xs0) - M, maxX = Math.max(...xs0) + M, minY = Math.min(...ys0) - M, maxY = Math.max(...ys0) + M;
+        const fill = (base, lo, hi) => { const out = base.slice(); let x = lo; while (x < hi) { x += 62 + R_() * 50; if (x < hi && !out.some(v => Math.abs(v - x) < 34)) out.push(x); } return out.sort((a, b) => a - b); };
+        const xs = fill(xs0, minX, maxX), ys = fill(ys0, minY, maxY);
+        let bld = '', park = '';
+        for (let i = 0; i < xs.length - 1; i++)for (let j = 0; j < ys.length - 1; j++) {
+          const x = xs[i], y = ys[j], w = xs[i + 1] - x, h = ys[j + 1] - y; if (w < 36 || h < 36) continue;
+          const r = R_();
+          if (r < .12) { park += `<rect x="${x + 9}" y="${y + 9}" width="${w - 18}" height="${h - 18}" rx="8"/>`; continue; }
+          if (r < .2) continue;
+          const cw = (w - 22) / 2, ch = (h - 22) / 2;
+          for (let a = 0; a < 2; a++)for (let b = 0; b < 2; b++) { if (R_() < .18) continue; const ix = R_() * 3, iy = R_() * 3; bld += `<rect x="${(x + 11 + a * cw + ix).toFixed(1)}" y="${(y + 11 + b * ch + iy).toFixed(1)}" width="${(cw - 3 - ix).toFixed(1)}" height="${(ch - 3 - iy).toFixed(1)}" rx="2"/>`; }
+        }
+        const artX = xs.filter((v, i) => i % 5 === 2), artY = ys.filter((v, i) => i % 6 === 3);
+        const road = (arr, vert, wd, cas) => arr.map(v => vert ? `<line x1="${v.toFixed(1)}" y1="${minY - 60}" x2="${v.toFixed(1)}" y2="${maxY + 60}" stroke="${cas}" stroke-width="${wd + 3}"/>` : `<line x1="${minX - 60}" y1="${v.toFixed(1)}" x2="${maxX + 60}" y2="${v.toFixed(1)}" stroke="${cas}" stroke-width="${wd + 3}"/>`).join('');
+        const roadF = (arr, vert, wd, col) => arr.map(v => vert ? `<line x1="${v.toFixed(1)}" y1="${minY - 60}" x2="${v.toFixed(1)}" y2="${maxY + 60}" stroke="${col}" stroke-width="${wd}"/>` : `<line x1="${minX - 60}" y1="${v.toFixed(1)}" x2="${maxX + 60}" y2="${v.toFixed(1)}" stroke="${col}" stroke-width="${wd}"/>`).join('');
+        const rivY = (minY + maxY) / 2 + 60;
+        const river = `<path d="M${minX - 80} ${rivY + 120} C ${minX + 120} ${rivY + 40}, ${(minX + maxX) / 2} ${rivY + 170}, ${maxX + 80} ${rivY - 80}" fill="none" stroke="var(--map-water)" stroke-width="46" stroke-linecap="round"/>`;
+        const lab = (t, x, y, rot, fs) => `<text x="${x}" y="${y}" font-size="${fs || 9}" font-weight="700" fill="var(--map-label)" text-anchor="middle" ${rot ? `transform="rotate(-90 ${x} ${y})"` : ''} style="paint-order:stroke;stroke:var(--map-art);stroke-width:3px">${t}</text>`;
+        const ax = artX[0] != null ? artX : [xs[2]], ay = artY[0] != null ? artY : [ys[3]];
+        const labels = `<g class="slabel">${lab('Amata Rd', ax[0], (minY + maxY) / 2 - 130, 1)}${ax[1] != null ? lab('Long Binh Rd', ax[1], (minY + maxY) / 2 + 250, 1) : ''}${lab('Industrial Ring Rd', (minX + maxX) / 2 - 120, ay[0] - 6, 0)}${ay[1] != null ? lab('Bien Hoa Hwy', (minX + maxX) / 2 + 90, ay[1] - 6, 0) : ''}${lab('Dong Nai river branch', minX + 190, rivY + 98, 0, 11)}</g>`;
+        let zones = '';
+        const ZD = { school: [96, 74, 'var(--s-m)'], office: [84, 62, 'var(--s-a)'], gated_facility: [78, 58, 'var(--ok)'], industrial: [132, 96, 'var(--warn)'] };
+        S.forEach(s => { const c = WP(s.pos), z = ZD[s.type]; zones += `<rect x="${(c[0] - z[0] / 2).toFixed(1)}" y="${(c[1] - z[1] / 2).toFixed(1)}" width="${z[0]}" height="${z[1]}" rx="10" fill="${z[2]}" fill-opacity=".16" stroke="${z[2]}" stroke-opacity=".75" stroke-width="1.5" stroke-dasharray="5 4"/>`; });
+        const svg = `<rect x="${minX - 400}" y="${minY - 400}" width="${maxX - minX + 800}" height="${maxY - minY + 800}" fill="var(--map-land)"/>
+   ${river}<g fill="var(--map-bld)">${bld}</g><g fill="var(--map-park)">${park}</g>
+   <g class="zones">${zones}</g>
+   ${road(xs, true, 7, 'var(--map-cas)')}${road(ys, false, 7, 'var(--map-cas)')}${roadF(xs, true, 7, 'var(--map-road)')}${roadF(ys, false, 7, 'var(--map-road)')}
+   ${road(artX, true, 12, 'var(--map-artcas)')}${road(artY, false, 12, 'var(--map-artcas)')}${roadF(artX, true, 12, 'var(--map-art)')}${roadF(artY, false, 12, 'var(--map-art)')}
+   ${labels}`;
+        BASE = { svg, bounds: [minX, minY, maxX, maxY] }; return BASE;
+      }
+      const colOf = p => ({ red: 'var(--bad)', amber: 'var(--warn)', green: 'var(--ok)' }[rk(p)]);
+      const legPts = (a, b, i) => i % 2 ? [a, [a[0], b[1]], b] : [a, [b[0], a[1]], b];
+      const pathD = p => 'M' + p.map(q => q[0].toFixed(1) + ' ' + q[1].toFixed(1)).join(' L');
+      function mkr(x, y, inner, attrs = '') { return `<g class="mkr" data-x="${x.toFixed(1)}" data-y="${y.toFixed(1)}" ${attrs}>${inner}</g>`; }
+      function badge(txt, fill, hollow, ring) {
+        return `${ring ? `<circle class="pulse" r="22" fill="${ring}"/>` : ''}<circle r="13" fill="${hollow ? 'var(--surface)' : fill}" stroke="${hollow ? fill : '#fff'}" stroke-width="2.5" ${hollow ? 'stroke-dasharray="4 3"' : ''}/><text y="${String(txt).length > 2 ? 3 : 4.3}" font-size="${String(txt).length > 2 ? 8 : 12}" font-weight="800" text-anchor="middle" fill="${hollow ? fill : '#fff'}" style="pointer-events:none">${txt}</text>`;
+      }
+      function stopLabel(s, I) {
+        const t = esc(s.name.length > 26 ? s.name.slice(0, 25) + '…' : s.name); const sub = I ? `${TYPE_S[s.type]} · ${I.deferred ? 'Tomorrow' : SLOT[I.slot]} · ${pct(I.p)}` : TYPE_S[s.type];
+        return `<g class="mlabel" transform="translate(0,28)" style="pointer-events:none"><text text-anchor="middle" font-size="11" font-weight="800" fill="var(--fg)" style="paint-order:stroke;stroke:var(--map-land);stroke-width:3.5px">${t}</text><text y="13" text-anchor="middle" font-size="9.5" font-weight="600" fill="var(--muted)" style="paint-order:stroke;stroke:var(--map-land);stroke-width:3px">${sub}</text></g>`;
+      }
+      function mapSVG(v, info, mode, focusId) {
+        const B = buildBase();
+        let legs = '', marks = '', nodes = [];
+        const hubC = WP(HUB);
+        const pr = st.incident && st.incident.to && v.order[0] === st.incident.to && !st.done[st.incident.to] ? st.incident : null;
+        if (mode === 'overview') {
+          let prev = st.pos;
+          v.order.forEach((id, i) => {
+            const a = wp(prev), b = wp(id), pts = legPts(a, b, i), d = pathD(pts), I = info[id];
+            legs += `<path d="${d}" fill="none" stroke="#fff" stroke-width="9" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"/><path d="${d}" fill="none" stroke="${colOf(I.p)}" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"/><path class="flow" d="${d}" fill="none" stroke="#fff" stroke-opacity=".75" stroke-width="1.6" stroke-dasharray="3 9" stroke-linecap="round" vector-effect="non-scaling-stroke"/><path d="${d}" class="hit" data-act="open" data-id="${id}" fill="none" stroke="transparent" stroke-width="26" vector-effect="non-scaling-stroke"/>`;
+            if (pr && i === 0) { legs += `<path class="jam" d="${d}" fill="none" stroke="var(--bad)" stroke-width="7" stroke-dasharray="2 10" stroke-linecap="round" vector-effect="non-scaling-stroke"/>`; marks += mkr(pts[1][0], pts[1][1], `<circle class="hz" r="16" fill="var(--bad)"/><circle r="13" fill="var(--bad)" stroke="#fff" stroke-width="2.5"/><g transform="translate(-8 -8)" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none">${ic('alert', 16).replace(/<svg[^>]*>|<\/svg>/g, '')}</g><g class="mlabel" transform="translate(0,28)"><text text-anchor="middle" font-size="10.5" font-weight="800" fill="var(--bad)" style="paint-order:stroke;stroke:var(--map-land);stroke-width:3.5px">Jam (simulated) +45 min</text></g>`); }
+            prev = id;
+          });
+          S.forEach(s => {
+            const I = info[s.id], c = WP(s.pos); nodes.push(c); let inner;
+            const ring = (!st.done[s.id] && I && !I.deferred && rk(I.p) !== 'green') ? colOf(I.p) : null;
+            if (st.done[s.id]) inner = badge('✓', 'var(--muted)');
+            else if (I && I.deferred) inner = badge('Tmrw', 'var(--warn)', true, 'var(--warn)');
+            else if (I) inner = badge(v.kind === 'plan' ? I.idx : '•', colOf(I.p), false, ring);
+            else inner = badge('–', 'var(--muted)');
+            marks += mkr(c[0], c[1], inner + stopLabel(s, I), `data-act="open" data-id="${s.id}"`);
+          });
+          nodes.push(hubC);
+          marks += mkr(hubC[0], hubC[1], `<circle r="16" fill="#2D7CF6" opacity=".18"/><circle r="8" fill="#2D7CF6" stroke="#fff" stroke-width="3"/><g class="mlabel" transform="translate(0,24)"><text text-anchor="middle" font-size="10.5" font-weight="800" fill="var(--fg)" style="paint-order:stroke;stroke:var(--map-land);stroke-width:3.5px">${st.pos === 'hub' ? 'Hub (assumed)' : 'Start'}</text></g>`);
+          if (st.pos !== 'hub') { const c = wp(st.pos); nodes.push(c); marks += mkr(c[0], c[1], `<circle r="20" fill="#2D7CF6" opacity=".18"/><circle r="6" fill="#2D7CF6" stroke="#fff" stroke-width="2.5"/>`); }
+        } else {
+          const id = focusId, idxIn = v.order.indexOf(id), fromId = idxIn > 0 ? v.order[idxIn - 1] : st.pos;
+          const a = wp(fromId), b = wp(id), pts = legPts(a, b, Math.max(idxIn, 0)), d = pathD(pts), I = info[id];
+          const col = I ? colOf(I.p) : 'var(--brand)';
+          nodes.push(a, b);
+          legs = `<path d="${d}" fill="none" stroke="#fff" stroke-width="11" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"/><path d="${d}" fill="none" stroke="${col}" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"/><path class="flow" d="${d}" fill="none" stroke="#fff" stroke-opacity=".75" stroke-width="1.8" stroke-dasharray="3 9" stroke-linecap="round" vector-effect="non-scaling-stroke"/>`;
+          if (pr && pr.to === id) { legs += `<path class="jam" d="${d}" fill="none" stroke="var(--bad)" stroke-width="8" stroke-dasharray="2 10" stroke-linecap="round" vector-effect="non-scaling-stroke"/>`; marks += mkr(pts[1][0], pts[1][1], `<circle class="hz" r="16" fill="var(--bad)"/><circle r="13" fill="var(--bad)" stroke="#fff" stroke-width="2.5"/><g transform="translate(-8 -8)" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none">${ic('alert', 16).replace(/<svg[^>]*>|<\/svg>/g, '')}</g>`); }
+          S.forEach(s => { if (s.id === id) return; const c = WP(s.pos); marks += mkr(c[0], c[1], badge('•', 'var(--muted)') + stopLabel(s, infoMap(view())[s.id]), `data-act="open" data-id="${s.id}"`); });
+          marks += fromId === 'hub' ? mkr(a[0], a[1], `<circle r="16" fill="#2D7CF6" opacity=".18"/><circle r="8" fill="#2D7CF6" stroke="#fff" stroke-width="3"/><g class="mlabel" transform="translate(0,24)"><text text-anchor="middle" font-size="10.5" font-weight="800" fill="var(--fg)" style="paint-order:stroke;stroke:var(--map-land);stroke-width:3.5px">Hub (assumed)</text></g>`) : mkr(a[0], a[1], badge(idxIn > 0 ? idxIn : '•', 'var(--fg)'));
+          marks += mkr(b[0], b[1], badge(I && I.idx ? I.idx : '•', col, false, col) + stopLabel(s_(id), I));
+        }
+        const svg = `<svg class="mapsvg" role="img" aria-label="Illustrative map built from dataset coordinates"><g class="mw">${B.svg}${legs}</g><g class="mk">${marks}</g></svg>`;
+        return { svg, nodes };
+      }
+      const s_ = id => byId[id];
+      function applyMap(box) {
+        const svg = box.querySelector('svg.mapsvg'), M = box._M; if (!svg) return;
+        svg.querySelector('.mw').setAttribute('transform', `translate(${M.tx.toFixed(1)} ${M.ty.toFixed(1)}) scale(${M.k.toFixed(4)})`);
+        svg.classList.toggle('zoomed', M.k >= 1.05); svg.classList.toggle('nozones', !M.zones);
+        svg.querySelectorAll('.mkr').forEach(g => g.setAttribute('transform', `translate(${(g.dataset.x * M.k + M.tx).toFixed(1)} ${(g.dataset.y * M.k + M.ty).toFixed(1)})`));
+        const sc = box.querySelector('.mscale'); if (sc) { const pxm = KMPX / 1000 * M.k; const opts = [50, 100, 200, 500, 1000, 2000]; let m = opts.find(o => o * pxm >= 36 && o * pxm <= 120) || opts[opts.length - 1]; sc.querySelector('i').style.width = (m * pxm).toFixed(0) + 'px'; sc.querySelector('span').textContent = m >= 1000 ? (m / 1000) + ' km' : m + ' m'; }
+      }
+      function fitMap(box) {
+        const M = box._M, svg = box.querySelector('svg.mapsvg'); const r = svg.getBoundingClientRect(); const W_ = r.width || 390, H_ = r.height || 290;
+        const pts = box._nodes; let x0 = 1e9, y0 = 1e9, x1 = -1e9, y1 = -1e9; pts.forEach(p => { x0 = Math.min(x0, p[0]); x1 = Math.max(x1, p[0]); y0 = Math.min(y0, p[1]); y1 = Math.max(y1, p[1]); });
+        const padT = 98, padB = M.full ? 200 : 46, padX = 48;
+        const bw = Math.max(70, x1 - x0), bh = Math.max(70, y1 - y0);
+        let k = Math.min((W_ - 2 * padX) / bw, (H_ - padT - padB) / bh); k = Math.max(.15, Math.min(k, box.dataset.maxfit ? +box.dataset.maxfit : 2.2));
+        M.k = k; M.tx = W_ / 2 - ((x0 + x1) / 2) * k; M.ty = padT + (H_ - padT - padB) / 2 - ((y0 + y1) / 2) * k; applyMap(box);
+      }
+      function zoomAt(box, cx, cy, nk) {
+        const M = box._M, svg = box.querySelector('svg.mapsvg'), r = svg.getBoundingClientRect();
+        nk = Math.max(.15, Math.min(4.5, nk)); const px = cx - r.left, py = cy - r.top; const wx = (px - M.tx) / M.k, wy = (py - M.ty) / M.k;
+        M.k = nk; M.tx = px - wx * nk; M.ty = py - wy * nk; applyMap(box);
+      }
+      function bindMap(box) {
+        const svg = box.querySelector('svg.mapsvg'), M = box._M; const ptrs = new Map(); let moved = 0, pinch = null;
+        svg.addEventListener('pointerdown', e => { ptrs.set(e.pointerId, { x: e.clientX, y: e.clientY }); moved = 0; if (ptrs.size === 2) { const [a, b] = [...ptrs.values()]; pinch = { d: Math.hypot(a.x - b.x, a.y - b.y) || 1, k: M.k }; } });
+        svg.addEventListener('pointermove', e => {
+          const p = ptrs.get(e.pointerId); if (!p) return; const dx = e.clientX - p.x, dy = e.clientY - p.y; ptrs.set(e.pointerId, { x: e.clientX, y: e.clientY }); moved += Math.abs(dx) + Math.abs(dy);
+          if (ptrs.size === 1 && moved > 5) { M.tx += dx; M.ty += dy; applyMap(box); box._drag = Date.now(); }
+          else if (ptrs.size === 2 && pinch) { const [a, b] = [...ptrs.values()]; const d = Math.hypot(a.x - b.x, a.y - b.y) || 1; zoomAt(box, (a.x + b.x) / 2, (a.y + b.y) / 2, pinch.k * d / pinch.d); box._drag = Date.now(); }
+        });
+        const up = e => { ptrs.delete(e.pointerId); if (ptrs.size < 2) pinch = null; };
+        svg.addEventListener('pointerup', up); svg.addEventListener('pointercancel', up); svg.addEventListener('pointerleave', up);
+        svg.addEventListener('wheel', e => { e.preventDefault(); zoomAt(box, e.clientX, e.clientY, M.k * Math.exp(-e.deltaY * 0.0015)); }, { passive: false });
+        box.addEventListener('click', e => { if (Date.now() - (box._drag || 0) < 250) { e.stopPropagation(); e.preventDefault(); } }, true);
+      }
+      function initMap(scrEl, key, nodes, maxfit) {
+        const box = scrEl.querySelector('.mapbox'); let M = MAPS[key];
+        const sig = nodes.map(p => p[0].toFixed(0) + ',' + p[1].toFixed(0)).join(';');
+        if (!M) { M = MAPS[key] = { k: 1, tx: 0, ty: 0, full: false, zones: true, sig: '' }; }
+        box._M = M; box._nodes = nodes; if (maxfit) box.dataset.maxfit = maxfit;
+        box.classList.toggle('full', M.full); bindMap(box);
+        if (M.sig !== sig) { M.sig = sig; fitMap(box); } else applyMap(box);
+      }
+      function ctlHTML(M) { return `<div class="mctl"><button data-act="mfull" aria-label="${M.full ? 'Exit full screen' : 'Full screen map'}">${ic(M.full ? 'shrink' : 'expand', 18)}</button><button data-act="mzoom" data-v="in" aria-label="Zoom in">${ic('plus', 18)}</button><button data-act="mzoom" data-v="out" aria-label="Zoom out">${ic('minus', 18)}</button><button class="fullonly" data-act="mfit" aria-label="Recenter">${ic('target', 18)}</button><button class="fullonly ${M.zones ? 'on' : ''}" data-act="mzones" aria-label="Toggle zones" aria-pressed="${M.zones}">${ic('layers', 18)}</button></div><div class="mscale"><span>200 m</span><i></i></div>`; }
+      const LEGEND = '<div class="legend2"><span><i style="background:var(--ok)"></i>Good</span><span><i style="background:var(--warn)"></i>Caution</span><span><i style="background:var(--bad)"></i>High risk</span><span><i class="zone"></i>Site zone</span><span><i class="jam"></i>Jam (simulated)</span></div>';
+
+      /* ================= Screen 1 ================= */
+      function cardHTML(id, I) {
+        const s = byId[id];
+        const stt = st.done[id] ? 'done' : st.failed[id] ? 'failed' : st.moved[id] ? 'moved' : 'todo';
+        const badgeH = stt === 'done' ? `<div class="seq ok">${ic('check', 20)}</div>` : (st.optimized && I && I.idx) ? `<div class="seq n">${I.idx}</div>` : `<div class="seq">${ic(TYPE_I[s.type], 20)}</div>`;
+        const stateP = stt === 'done' ? '<span class="pill p-ok">Delivered</span>' : stt === 'failed' ? '<span class="pill p-bad">Failed · retry</span>' : stt === 'moved' ? '<span class="pill p-warn">Moved to tomorrow</span>' : (I && I.deferred) ? '<span class="pill p-warn">Suggest tomorrow</span>' : '';
+        const risk = (stt === 'todo' && I) ? rkPill(I.p) : '';
+        const conf = st.conf[id];
+        const cp = stt !== 'todo' ? '' : conf === 'confirmed' ? '<span class="pill p-ok">Buyer confirmed</span>' : conf === 'pending' ? '<span class="pill p-warn">Awaiting reply</span>' : '<span class="pill p-mute">Buyer not asked</span>';
+        return `<div class="ocard ${stt !== 'todo' ? 'done' : ''}" role="button" tabindex="0" data-act="open" data-id="${id}">${badgeH}
+  <div class="body"><div class="l1"><span class="name">${esc(s.name)}</span>${stateP || risk}</div>
+  <div class="addr">${ic('pin', 14)}<span>${TYPE_S[s.type]} · Order ${s.oid}</span></div>
+  <div class="meta-row">${I && stt === 'todo' ? `<span>${slotTag(I.slot, I.deferred ? null : I.eta)}${I.deferred ? ' · tomorrow 08:30' : ''}</span>` : ''}${s.pay === 'cod' ? `<span class="pill p-brand">${ic('cash', 12)}COD</span>` : '<span class="pill p-ok">Prepaid</span>'}${cp}</div></div></div>`;
+      }
+      function listHTML(v, info) {
+        const order = v.order.concat(v.deferred || []);
+        const all = order.concat(S.map(s => s.id).filter(id => order.indexOf(id) < 0));
+        const f = st.filter;
+        const items = all.filter(id => {
+          const I = info[id]; const todo = !st.done[id] && !st.failed[id] && !st.moved[id];
+          const q = (st.q || '').trim().toLowerCase();
+          if (q && !(byId[id].name + ' ' + byId[id].oid + ' ' + TYPE_L[byId[id].type]).toLowerCase().includes(q)) return false;
+          if (f === 'risk') return todo && I && rk(I.p) === 'red';
+          if (f === 'confirm') return todo && st.conf[id] !== 'confirmed';
+          if (f === 'cod') return byId[id].pay === 'cod';
+          if (f === 'done' && todo) return false;
+          return true;
+        });
+        return items.length ? items.map(id => cardHTML(id, info[id])).join('') : '<div class="card" style="text-align:center;color:var(--muted)">No orders match this filter.</div>';
+      }
+      render.orders = () => {
+        const base = makeBase(), plan = makePlan(), v = view(), info = infoMap(v);
+        const nEve = base.e.filter(x => slotOf(x.eta) === 'evening' && (byId[x.id].type === 'school' || byId[x.id].type === 'office')).length;
+        const left = remaining().length, done = S.filter(s => st.done[s.id]).length;
+        const chips = [['all', 'All'], ['risk', 'High risk'], ['confirm', 'Needs confirm'], ['cod', 'COD'], ['done', 'Done']];
+        const sum = st.optimized
+          ? `<div class="sub" style="margin:0">Predicted first-attempt success (optimized)</div><div class="sumrow"><div class="big">${pct(plan.exp, 1)}</div><div style="text-align:right"><div class="delta">${plan.exp >= base.exp ? '+' : ''}${dec((plan.exp - base.exp) * 100)} pts</div><div class="sub" style="margin:0">vs map route (${pct(base.exp, 1)})</div></div></div>`
+          : `<div class="sub" style="margin:0">Predicted first-attempt success (map route)</div><div class="sumrow"><div class="big">${pct(base.exp, 1)}</div><span class="rk ${nEve ? 'red' : 'green'}">${nEve} stops land in the evening</span></div>`;
+        $('#s-orders').innerHTML = `
+  <div class="top"><div class="avatar" aria-hidden="true">M</div>
+    <div class="hello"><small>New rider · covering R06 area · Bien Hoa</small><strong>${dayTxt()} · ${hm(st.clock)}</strong></div>
+    <button class="cbtn" aria-label="Notifications" data-act="toast" data-v="You have 2 new messages from the hub"><span class="dot"></span>${ic('bell', 20)}</button></div>
+  <div class="scroll">
+    <div class="xp"><div class="lvl">${st.lvl}</div><div class="meta"><div class="row"><b>${lvName(st.lvl)}</b><span>${st.xp}/500 XP · ${500 - st.xp} to level ${st.lvl + 1}</span></div><div class="bar"><i style="width:${st.xp / 5}%"></i></div></div></div>
+    <label class="search">${ic('search', 18)}<input id="q" type="search" placeholder="Search order ID, site or type" value="${esc(st.q || '')}"></label>
+    <div class="sumcard">${sum}<div class="bar"><i style="width:${Math.round((st.optimized ? plan.exp : base.exp) * 100)}%"></i></div>
+      <div class="sub" style="margin:0">Estimated from ${num(DATA.meta.orders)} dataset orders, not a test result</div></div>
+    <div class="sec"><h1 class="h1">Today's deliveries</h1><p class="sub">${done}/${S.length} delivered · ${left} left · ${st.optimized ? 'ordered by time slot' : 'ordered by map distance'}</p></div>
+    <div class="chips" role="tablist">${chips.map(([k, l]) => `<button class="chip ${st.filter === k ? 'on' : ''}" data-act="filter" data-v="${k}">${l}</button>`).join('')}</div>
+    <div class="list" id="olist">${listHTML(v, info)}</div>
+  </div>
+  ${left ? `<div class="dock"><button class="btn primary block" data-act="optimize">${ic('wand', 20)}${st.optimized ? 'View optimized route' : 'Optimize route by time slot'}</button>
+   <p>New to this area? Let the system pick the order. Know the roads? Tap any order to choose your own.</p></div>`: ''}
+  ${navHTML('orders')}`;
+      };
+
+      /* ================= Screen 2 ================= */
+      render.route = () => {
+        const base = makeBase(), v = makePlan(), info = infoMap(v);
+        const cod = remaining().filter(id => byId[id].pay === 'cod').length, dn = v.deferred.length, saved = base.km - v.km, firstId = v.order[0];
+        const M = MAPS.route || { full: false, zones: true };
+        const mp = mapSVG(v, info, 'overview');
+        const alert = st.alert ? `<div class="alertbar ${st.alert.ok ? 'ok' : ''}">${ic(st.alert.ok ? 'check' : 'alert', 18)}<span>${st.alert.text}</span></div>` : '';
+        const nextTxt = firstId ? `Next: ${esc(byId[firstId].name)} · ${hm(v.e[0].eta)}` : 'No orders left in the route';
+        const why = acc('Why this route?', 'Details for reference', `<div class="banner" style="background:var(--brand-soft);color:var(--brand-text);margin-bottom:10px">${ic('bolt', 18)}Map route ${pct(base.exp, 1)} → time-slot route ${pct(v.exp, 1)} (${v.exp >= base.exp ? '+' : ''}${dec((v.exp - base.exp) * 100)} pts, ${dec(Math.abs(saved))} km ${saved >= 0 ? 'shorter' : 'longer'})</div>
+    <p class="sub" style="margin:0">Stops are ordered so that school and agency stops are visited before 17:00, when their first-attempt success drops sharply in the data. Gated sites and factories are less affected by the evening, so they go last. Stops that would still land in the evening are suggested for tomorrow morning.</p>`);
+        $('#s-route').classList.add('nonav');
+        $('#s-route').innerHTML = `
+  <div class="mapbox ${M.full ? 'full' : ''}">${mp.svg}
+    <div class="maptop"><button class="cbtn sm" data-act="go" data-v="orders" aria-label="Back">${ic('left', 20)}</button>
+    <div class="maptitle">${ic('wand', 16)}Time-slot route · ${v.order.length} stops</div>
+    <button class="cbtn sm" data-act="delay" aria-label="Simulate a traffic jam">${ic('clock', 18)}</button></div>
+    ${ctlHTML(M)}
+    <div class="fullcard fullonly blk"><div class="t1"><h3>${nextTxt}</h3>${firstId ? rkPill(info[firstId].p) : ''}</div><p class="sub">${v.order.length} stops · ${dec(v.km)} km · finish ${v.order.length ? hm(v.end) : '--:--'} · predicted ${pct(v.exp, 1)}</p>
+      ${firstId ? `<div class="row2"><button class="btn primary" style="flex:1" data-act="open" data-id="${firstId}">${ic('nav', 18)}Start stop 1</button><button class="btn ghost" data-act="mfull">Close map</button></div>` : '<div class="row2"><button class="btn ghost" style="flex:1" data-act="mfull">Close map</button></div>'}${LEGEND}</div></div>
+  <div class="sheet"><div class="grab"></div>
+    <h1 class="h1">Route overview</h1><p class="sub">Start ${hm(st.clock)} · ${dayTxt()} · tap a stop or road on the map for details</p>
+    ${alert}
+    <div class="stats">
+      <div class="stat"><b>${v.n}</b><span>Orders left</span></div>
+      <div class="stat"><b>${dn}</b><span>Suggested tomorrow</span></div>
+      <div class="stat"><b>${cod}</b><span>COD orders</span></div>
+      <div class="stat"><b>${dec(v.km)} km</b><span>Distance</span></div>
+      <div class="stat"><b>${v.order.length ? hm(v.end) : '--:--'}</b><span>Expected finish</span></div>
+      <div class="stat"><b>${pct(v.exp, 1)}</b><span>Predicted 1st attempt</span></div></div>
+    <div class="h2">Route progress</div>
+    <div class="steps"><div class="st done"><i>${ic('home', 14)}</i>${st.pos === 'hub' ? 'Hub' : 'You'}<b>${hm(st.clock)}</b></div>
+      ${v.e.map(x => { const I = info[x.id]; return `<div class="st ${x.id === firstId ? 'cur' : ''}"><i>${I.idx}</i>${esc(TYPE_S[byId[x.id].type])}<b>${hm(x.eta)}</b></div>`; }).join('')}</div>
+    <div class="h2">Delivery order</div>
+    ${v.e.map(x => { const s = byId[x.id], I = info[x.id]; return `<div class="srow" role="button" tabindex="0" data-act="open" data-id="${x.id}"><div class="seq n" style="width:34px;height:34px;font-size:14px;background:${colOf(I.p)}">${I.idx}</div><div class="t"><b>${esc(s.name)}</b><span>${TYPE_S[s.type]} · ${SLOT[I.slot]} · ${pct(I.p)}</span></div><div class="e">${hm(x.eta)}<br><span style="font-weight:500">${dec(x.km)} km</span></div></div>`; }).join('')}
+    ${dn ? `<div class="subh">Suggested for tomorrow morning (${dn})</div>` + v.deferred.map(id => { const s = byId[id], I = info[id], bp = lk(s.type, slotOf(etaList([id], st.clock, st.pos).e[0].eta), st.dt).p; return `<div class="srow" role="button" tabindex="0" data-act="open" data-id="${id}"><div class="seq" style="width:34px;height:34px;font-size:10px;background:var(--warn-soft);color:var(--warn)">Tmrw</div><div class="t"><b>${esc(s.name)}</b><span>Today ${pct(bp)} → tomorrow morning ${pct(I.p)}</span></div><div class="e">08:30</div></div>`; }).join('') : ''}
+    ${why}
+  </div>
+  ${firstId ? `<div class="foot"><button class="btn primary block" data-act="open" data-id="${firstId}">${ic('nav', 18)}Start stop 1 · ${hm(v.e[0].eta)}</button></div>` : `<div class="foot"><button class="btn soft block" data-act="go" data-v="orders">No orders left · Back to list</button></div>`}`;
+        initMap($('#s-route'), 'route', mp.nodes);
+      };
+
+      /* ================= Screen 3 ================= */
+      function sortedNotes(id) { return st.notes[id].slice().sort((x, y) => (y.star - x.star) || (y.ok - y.bad * 2) - (x.ok - x.bad * 2)); }
+      function noteHTML(n) {
+        const v = st.votes[n.id];
+        const eff = n.eff ? `<div class="noteeff">With this note: first-attempt success <b style="color:${n.eff[1] < .62 ? 'var(--bad)' : 'var(--fg)'}">${pct(n.eff[1])}</b> (n=${n.eff[0]}) vs 72.7% average</div>` : '';
+        const ph = n.photo ? `<div class="ph"><img src="${n.photo}" alt="Note photo"><span>${ic('camera', 11)} Your photo</span></div>` : '';
+        return `<article class="note ${n.star ? 'star' : ''}"><div class="nh"><div class="nav-a">${n.mine ? 'Me' : 'R6'}</div><div class="w"><b>${n.mine ? 'You' : 'Logged from R06 data'}</b><br>${n.mine ? 'Just now' : `${n.n} times · last ${n.last}`}</div>
+   <button class="starbtn ${n.star ? 'on' : ''}" data-act="star" data-id="${n.id}" aria-pressed="${n.star}" aria-label="Mark as important">${ic('star', 18)}</button></div>
+   <p class="ntext">${esc(n.t)}</p>${ph}${eff}
+   <div class="fb"><span>Still accurate?</span>
+    <button class="vote ${v === 'ok' ? 'on-ok' : ''}" data-act="vote" data-id="${n.id}" data-v="ok">${ic('up', 14)}Yes ${n.ok}</button>
+    <button class="vote ${v === 'bad' ? 'on-bad' : ''}" data-act="vote" data-id="${n.id}" data-v="bad">${ic('down', 14)}No ${n.bad}</button></div></article>`;
+      }
+      function renderNotes() { const id = st.active; $('#notes').innerHTML = sortedNotes(id).map(noteHTML).join(''); $('#ncount').textContent = st.notes[id].length + '/8'; }
+      function confCard(id) {
+        const c = st.conf[id], safe = pMorn(byId[id].type);
+        let line, btns = '';
+        if (c === 'confirmed') { line = `<span class="pill p-ok">Confirmed</span><span>The recipient confirmed they can receive in this time window.</span>`; btns = `<button data-act="conf" data-id="${id}" data-v="reset">Reset</button>`; }
+        else if (c === 'pending') { line = `<span class="pill p-warn">Awaiting reply</span><span>2 quick questions sent. If there is no answer in 15 min, use the safe slot from the rule (${SLOT.morning} ${pct(safe.p)}).</span>`; btns = `<button class="main" data-act="conf" data-id="${id}" data-v="yes">Simulate: replied</button><button data-act="conf" data-id="${id}" data-v="none">Simulate: no reply</button>`; }
+        else if (c === 'noreply') { line = `<span class="pill p-bad">No reply</span><span>Fallback rule applied: prefer the morning slot (${pct(safe.p)}).</span>`; btns = `<button data-act="conf" data-id="${id}" data-v="reset">Reset</button>`; }
+        else { line = `<span class="pill p-mute">Not asked</span><span>Ask the recipient when they will be available before you arrive.</span>`; btns = `<button class="main" data-act="conf" data-id="${id}" data-v="send">${ic('chat', 14)} Ask recipient</button>`; }
+        return `<div class="card"><div class="h2"><span>Confirm with recipient</span><span class="pill p-mute">Simulated</span></div><div class="pc">${line}</div><div class="pcbtns">${btns}</div></div>`;
+      }
+      render.detail = () => {
+        const id = st.active, s = byId[id], v = view(), info = infoMap(v), I = info[id] || { p: .5, slot: 'afternoon', eta: st.clock, n: 0, src: '', idx: null, deferred: false };
+        const base = infoMap(makeBase())[id] || I, type = s.type;
+        const M = MAPS['detail:' + id] || { full: false, zones: true };
+        const mp = mapSVG(v, info, 'focus', id);
+        const bars = ['morning', 'afternoon', 'evening'].map(sl => { const l = lk(type, sl, st.dt); return `<div class="${sl === I.slot ? 'cur' : ''}"><span>${pct(l.p)}</span><i style="height:${Math.max(6, Math.round(l.p * 52))}px;background:var(--s-${sl[0]})"></i><span>${SLOT[sl]}</span></div>`; }).join('');
+        const dr = lk(type, I.slot, st.dt);
+        let decision;
+        if (I.deferred) decision = `Suggested: <b>move to tomorrow morning</b>. Today ${pct(base.p)} → tomorrow morning ${pct(I.p)}.`;
+        else if (st.force[id] && rk(I.p) === 'red') decision = 'You chose to deliver today anyway. This is logged for comparison.';
+        else decision = rk(I.p) === 'red' ? 'High risk, but there is no better slot today.' : 'Keep the current slot.';
+        const etaTxt = I.deferred ? 'Tmrw 08:30' : hm(I.eta);
+        const legKm = v.e.find(x => x.id === id);
+        const doneNote = st.done[id] ? '<div class="alertbar ok">' + ic('check', 18) + '<span>This order is already delivered.</span></div>' : '';
+        const why = acc('Why this time slot?', 'Rule details, for reference', `
+      <div class="whyrow"><span>Input</span><span>${TYPE_S[type]} · ${SLOT[I.slot]}${I.deferred ? '' : ' (' + hm(I.eta) + ')'} · ${st.dt === 'wd' ? 'weekday' : 'weekend'}</span></div>
+      <div class="whyrow"><span>Rule</span><span>First-attempt success <b>${pct(dr.p, 1)}</b> (n=${dr.n})${dr.fb ? '<br><span style="color:var(--warn)">Sparse cell, using ' + esc(dr.src) + '</span>' : ''}</span></div>
+      <div class="whyrow"><span>Result</span><span>${decision}</span></div>
+      <div class="mbar" style="margin-top:10px">${bars}</div>
+      <div class="sub" style="margin:6px 0 0">First-attempt success by time slot for ${TYPE_S[type].toLowerCase()} sites</div>`);
+        $('#s-detail').classList.remove('nonav');
+        $('#s-detail').innerHTML = `
+  <div class="mapbox ${M.full ? 'full' : ''}" data-maxfit="2.2">${mp.svg}
+    <div class="maptop"><button class="cbtn sm" data-act="back3" aria-label="Back">${ic('left', 20)}</button>
+    <div class="maptitle">${ic('pin', 16)}${esc(s.name)}</div>
+    <button class="cbtn sm" data-act="toast" data-v="SOS sent to the dispatch hub (demo)" aria-label="Emergency SOS" style="color:var(--bad)">${ic('shield', 18)}</button></div>
+    ${ctlHTML(M)}
+    <div class="mapchip">${ic('nav', 14)}${legKm ? dec(legKm.km) + ' km' : '—'}</div><div class="mapchip r">${ic('clock', 14)}${etaTxt}</div>
+    <div class="fullcard fullonly blk"><div class="t1"><h3>${esc(s.name)}</h3>${rkPill(I.p)}</div><p class="sub">${TYPE_L[type]} · ETA ${etaTxt} · ${legKm ? dec(legKm.km) + ' km' : ''}</p>
+      <div class="row2"><button class="btn primary" style="flex:1" data-act="toast" data-v="Opening turn-by-turn navigation (demo)">${ic('nav', 18)}Navigate</button><button class="btn ghost" data-act="mfull">Close map</button></div>${LEGEND}</div></div>
+  <div class="sheet"><div class="grab"></div>
+    ${doneNote}
+    <div class="ohead"><div style="min-width:0"><span class="pill p-brand">${I.idx ? `Stop ${I.idx}/${v.order.length} · ` : ''}${s.oid}</span><h1 class="h2" style="font-size:19px;font-weight:800;margin:8px 0 4px">${esc(s.name)}</h1>
+     <div class="addr">${ic('pin', 14)}<span>${TYPE_L[type]} · Recipient #${esc(s.buyer.slice(1))}</span></div></div>${rkPill(I.p)}</div>
+    <div class="acts"><button class="act" data-act="toast" data-v="Calling the recipient via masked number (demo)">${ic('phone', 16)}Call</button><button class="act" data-act="toast" data-v="Opening chat with the recipient (demo)">${ic('chat', 16)}Chat</button><button class="act main" data-act="toast" data-v="Opening turn-by-turn navigation (demo)">${ic('nav', 16)}Navigate</button></div>
+    <div class="card" style="margin-top:14px"><div class="kv">
+      <div><small>ETA</small><b>${etaTxt}</b></div><div><small>Handling time at site</small><b>${s.svc} min</b></div>
+      <div><small>Payment</small><b style="color:${s.pay === 'cod' ? 'var(--brand-text)' : 'var(--ok)'}">${s.pay === 'cod' ? 'COD' : 'Prepaid'}</b></div><div><small>Parcel</small><b>${PAR[s.parcel]}</b></div>
+      <div style="grid-column:1/-1"><small>Address on order</small><b style="font-weight:600;font-size:13px">${esc(s.addr)}</b></div>
+      ${s.gpsOrder ? '' : '<div style="grid-column:1/-1"><span class="pill p-warn">Order has no GPS pin: using the site average location</span></div>'}</div></div>
+    ${confCard(id)}
+    <div class="h2"><span>Notes for this stop</span><span class="pill p-brand" id="ncount"></span></div>
+    <p class="sub" style="margin:-6px 0 12px">Starred notes come first. Max 8 notes per address (${Math.max(0, s.loc.ntot - 8)} less common notes hidden). Confirm whether each note is still accurate when you arrive.</p>
+    <div id="notes"></div>
+    ${why}
+  </div>
+  <div class="foot">${I.deferred && !st.done[id] ? `<button class="btn ghost" style="flex:1" data-act="force">Deliver today</button><button class="btn primary" style="flex:2" data-act="move">${ic('clock', 18)}Move to tomorrow</button>` : `<button class="btn ghost" style="flex:1" data-act="fail">Failed</button><button class="btn primary" style="flex:2" data-act="deliver" ${st.done[id] ? 'disabled' : ''}>${ic('check', 18)}Delivered</button>`}</div>`;
+        renderNotes();
+        initMap($('#s-detail'), 'detail:' + id, mp.nodes, 2.2);
+      };
+
+      /* ================= Screen 4 ================= */
+      const REASONS = ['Traffic jam', 'Recipient rescheduled', 'Waiting for guard / reception', 'Hard-to-find address', 'Other'];
+      const TAGS = ['Side gate for motorbikes', 'Leave with guard', 'Reception closed at lunch', 'ID registration needed', 'Office hours only'];
+      const DELR = ['Information changed', 'Note is incorrect', 'Duplicate', 'No longer relevant'];
+      function delList(id) { return st.notes[id].map(n => `<div class="drow"><div class="nav-a">${n.mine ? 'Me' : 'R6'}</div><span>${esc(n.t)}</span><button class="vote" data-act="delpick" data-id="${n.id}" aria-label="Request removal">${ic('trash', 14)}</button></div>`).join(''); }
+      function earnedHTML() { const t = st.earned.reduce((s, e) => s + e.xp, 0); return st.earned.length ? st.earned.map(e => `<div class="earn"><span>${esc(e.label)}</span><b>+${e.xp} XP</b></div>`).join('') + `<div class="earn" style="border-top:1px solid var(--line);margin-top:4px;padding-top:8px"><span style="color:var(--fg);font-weight:700">This session</span><b>+${t} XP</b></div>` : '<div class="earn"><span>Add a note or confirm one to earn XP</span></div>'; }
+      function actualFor(id) { const info = infoMap(view())[id]; const eta = info && info.eta != null ? info.eta : st.clock; return { eta, act: eta + (st.late12 ? 12 : 0) }; }
+      render.done = () => {
+        const id = st.active, s = byId[id], { eta, act } = actualFor(id), late = st.late12, sl = slotOf(act), cell = lk(s.type, sl, st.dt);
+        const newP = (cell.p * cell.n + 1) / (cell.n + 1);
+        $('#s-done').classList.add('nonav');
+        $('#s-done').innerHTML = `
+  <div class="top"><button class="cbtn sm" data-act="go" data-v="detail" aria-label="Back">${ic('left', 20)}</button><div class="hello"><small>${s.oid}</small><strong>Complete delivery</strong></div></div>
+  <div class="scroll" style="padding:0 16px 140px">
+   <div class="card"><div class="hero"><div class="okc">${ic('check', 32)}</div><h1 class="h1">Delivered</h1>
+     <p class="sub">${esc(s.name)}</p>
+     <div class="field-row" style="justify-content:center"><span class="pill p-mute">Planned ${hm(eta)}</span><span class="pill p-mute">Actual ${hm(act)}</span>${late ? '<span class="pill p-warn">12 min late</span>' : '<span class="pill p-ok">On time</span>'}</div></div>
+     <div class="tl">${[['Left hub', hm(st.start)], ['On the way', hm(Math.max(st.start, eta - 8))], ['Arrived', hm(act - 3)], ['Delivered', hm(act)]].map(([l, t]) => `<div class="st done"><i>${ic('check', 14)}</i>${l}<b>${t}</b></div>`).join('')}</div></div>
+   <div class="card"><div class="h2">Delivery confirmation</div>
+    <div class="rowline"><div class="thumb" id="podThumb">${ic('camera', 22)}</div><div style="flex:1;min-width:0"><b>Delivery photo</b><small>Optional, helps with disputes</small></div>
+      <label class="btn soft" style="height:40px;padding:0 14px;font-size:13px;cursor:pointer">Take photo<input type="file" id="podFile" accept="image/*" hidden></label></div>
+    ${s.pay === 'cod' ? `<div class="rowline" style="margin-top:14px"><div><b>COD collected</b><small>Confirm you received the cash to finish</small></div><button class="tog" id="codTog" data-act="cod" role="switch" aria-checked="false" aria-label="COD collected"></button></div>` : ''}</div>
+   ${late ? `<div class="card"><div class="h2"><span>Why were you late?</span><span class="pill p-warn">Required</span></div>
+     <div class="chipset" style="margin-bottom:8px">${REASONS.map(r => `<button class="chip line" data-act="late-reason" data-v="${r}">${r}</button>`).join('')}</div>
+     <textarea class="ta" id="lateText" placeholder="Add more detail (optional)" maxlength="160"></textarea></div>`: ''}
+   <div class="card"><div class="h2"><span>Leave a note for the next rider</span><span class="pill p-brand" id="dcount">${st.notes[id].length}/8</span></div>
+     <textarea class="ta" id="noteText" placeholder="e.g. side gate open until 9 PM, tell the guard the room number…" maxlength="140"></textarea>
+     <div class="chipset">${TAGS.map(t => `<button class="chip line" data-act="tag" data-v="${t}">${t}</button>`).join('')}</div>
+     <div class="field-row" style="margin-top:0"><button class="circ" id="micBtn" data-act="mic" aria-label="Voice to text">${ic('mic', 20)}</button>
+      <label class="circ" style="cursor:pointer" aria-label="Add photo">${ic('camera', 20)}<input type="file" id="noteFile" accept="image/*" hidden></label>
+      <button class="circ" id="starBtn" data-act="dstar" aria-pressed="false" aria-label="Mark as important">${ic('star', 20)}</button>
+      <div class="thumb" id="noteThumb" style="width:44px;height:44px;border-radius:12px;display:none"></div>
+      <span style="flex:1"></span><span class="sub" id="ncnt">0/140</span></div>
+     <p class="sub" id="micState" hidden style="color:var(--brand-text);margin-top:8px"></p>
+     <p class="sub" style="margin-top:10px">${ic('bolt', 12)} +10 XP per note · +15 XP with photo · +5 XP by voice</p>
+     <button class="btn primary block" style="margin-top:12px" data-act="addnote">${ic('plus', 18)}Add note</button></div>
+   <div class="card" id="delCard"><div class="h2"><span>Note no longer accurate?</span></div><p class="sub" style="margin:-4px 0 6px">Pick a note and give a reason to request removal (+8 XP).</p>
+     <div id="dlist">${delList(id)}</div><div id="delForm" hidden>
+      <div class="chipset">${DELR.map(r => `<button class="chip line" data-act="del-reason" data-v="${r}">${r}</button>`).join('')}</div>
+      <textarea class="ta" id="delText" placeholder="Reason for removal (optional)" maxlength="120" style="min-height:56px"></textarea>
+      <div class="field-row"><button class="btn ghost" style="flex:1" data-act="delcancel">Cancel</button><button class="btn primary" style="flex:2" data-act="delsend">Send removal request</button></div></div></div>
+   <div class="card"><div class="rowline" style="margin-bottom:10px"><div class="rowline" style="gap:10px"><div class="lvl" id="lvlB">${st.lvl}</div><div><b id="lvlN">${lvName(st.lvl)}</b><small id="xpT">${st.xp}/500 XP</small></div></div></div>
+     <div class="bar" style="margin-bottom:12px"><i id="xpBar" style="width:${st.xp / 5}%"></i></div><div id="earned">${earnedHTML()}</div></div>
+   ${acc('This delivery feeds the rule', 'Feedback loop, for reference', `<div class="whyrow"><span>Rule cell</span><span>${TYPE_S[s.type]} · ${SLOT[sl]} · ${st.dt === 'wd' ? 'weekday' : 'weekend'}</span></div><div class="whyrow"><span>Update</span><span>n = ${cell.n} → <b>${cell.n + 1}</b><br>Rate ${pct(cell.p, 1)} → <b>${pct(newP, 1)}</b></span></div>`)}
+  </div>
+  <div class="foot"><p class="hintline" id="finHint" hidden></p><button class="btn primary block" id="finBtn" data-act="finish">Finish &amp; go to next order</button></div>`;
+        refreshDone();
+      };
+      function refreshDone() {
+        const id = st.active, s = byId[id]; let miss = [];
+        if (st.late12 && !st.draft.reason) miss.push('a reason for being late'); if (s.pay === 'cod' && !st.draft.cod) miss.push('COD confirmation');
+        const b = $('#finBtn'), h = $('#finHint'); if (!b) return; b.disabled = miss.length > 0; h.hidden = !miss.length; h.textContent = miss.length ? 'Needs ' + miss.join(' and ') + ' to finish' : '';
+        $('#dcount').textContent = st.notes[id].length + '/8'; $('#dlist').innerHTML = delList(id);
+        $('#lvlB').textContent = st.lvl; $('#lvlN').textContent = lvName(st.lvl); $('#xpT').textContent = st.xp + '/500 XP'; $('#xpBar').style.width = st.xp / 5 + '%'; $('#earned').innerHTML = earnedHTML();
+      }
+
+      /* ================= Navigation & actions ================= */
+      const SCREENS = ['orders', 'route', 'detail', 'done'];
+      function go(name) {
+        logEv('screen', name);
+        st.screen = name; SCREENS.forEach(n => { $('#s-' + n).hidden = n !== name; });
+        render[name](); const el = $('#s-' + name); el.classList.remove('enter'); void el.offsetWidth; el.classList.add('enter');
+        $('#status').classList.toggle('mapview', name === 'route' || name === 'detail');
+        $('#clock').textContent = hm(st.clock); renderPanel();
+      }
+      function openStop(id) { st.active = id; st.earned = []; st.votes = {}; resetDraft(); go('detail'); }
+      function optimize() {
+        if (st.optimized) { go('route'); return; }
+        const n = remaining().length; let f = 1; for (let i = 2; i <= n; i++)f *= i;
+        overlay(`<div class="spin"></div><h2 class="h1" style="font-size:18px">Optimizing by time slot</h2><p class="sub">Reading ${n} orders, looking up the rule table (site type × time slot × day), trying ${num(f)} sequences and picking the one with the best predicted success.</p>`, 'center');
+        setTimeout(() => { closeOverlay(); st.optimized = true; taskHit('A'); go('route'); }, 1100);
+      }
+      function simDelay() {
+        const old = makePlan(); st.clock += 45; const keep = evalKeep(old);
+        const nw = makePlan(); const added = nw.deferred.filter(id => old.deferred.indexOf(id) < 0);
+        const reord = old.order.join() !== nw.order.join();
+        st.incident = nw.order[0] ? { to: nw.order[0] } : null;
+        let t = 'Traffic jam on the way (+45 min, simulated). If you keep the old route, predicted first-attempt success is ' + pct(keep, 1) + '. New route: ' + pct(nw.exp, 1) + '.';
+        if (added.length) t += ' Suggested for tomorrow: ' + added.map(id => esc(byId[id].name)).join(', ') + '.'; else if (reord) t += ' Stop order updated.';
+        st.alert = { text: t, ok: nw.exp >= keep }; logEv('replan', t);
+        $('#clock').textContent = hm(st.clock); go('route');
+      }
+      function setScenario(k, v) {
+        if (k === 'dt') st.dt = v;
+        if (k === 'start') { st.start = +v; const progressed = S.some(s => st.done[s.id] || st.failed[s.id] || st.moved[s.id]); if (!progressed) { st.clock = st.start; st.pos = 'hub'; } }
+        st.alert = null; st.incident = null; MAPS = {}; go(st.screen);
+      }
+      function startVoice() {
+        const d = st.draft; if (d.recording) return; d.recording = true;
+        const btn = $('#micBtn'), ta = $('#noteText'), m = $('#micState'); btn.classList.add('rec'); m.hidden = false; m.textContent = 'Listening… say your note';
+        let settled = false;
+        const finish = txt => { if (settled) return; settled = true; d.recording = false; btn.classList.remove('rec'); m.hidden = true; if (txt) { ta.value = ((ta.value ? ta.value + ' ' : '') + txt).slice(0, 140); d.voice = true; $('#ncnt').textContent = ta.value.length + '/140'; toast('Voice converted to text'); } };
+        const demo = () => setTimeout(() => finish('Side gate is open until nine at night, tell the guard the room number.'), 1500);
+        const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+        if (!SR) { demo(); return; }
+        try { const r = new SR(); r.lang = 'en-US'; r.onresult = e => finish(e.results[0][0].transcript); r.onerror = () => { if (!settled) demo(); }; r.onend = () => { if (!settled) demo(); }; r.start(); } catch (e) { demo(); }
+      }
+      function replanAfter(prevSig, prefix) {
+        const nw = makePlan();
+        if (prevSig !== nw.order.join() + '|' + nw.deferred.join() && remaining().length) { st.alert = { text: prefix + ' Route re-planned from your current position. Predicted first-attempt success for the rest: ' + pct(nw.exp, 1) + '.', ok: true }; }
+      }
+
+      /* ================= Test instrumentation ================= */
+      const T = { tester: '', run: null, runs: [], taps: 0, mis: 0, events: [], t0: Date.now() };
+      try { const r = localStorage.getItem('shipperRunsEN'); if (r) T.runs = JSON.parse(r) || []; } catch (e) { }
+      function saveRuns() { try { localStorage.setItem('shipperRunsEN', JSON.stringify(T.runs)); } catch (e) { } }
+      function logEv(kind, detail) { T.events.push({ t: Date.now() - T.t0, kind, detail }); if (T.events.length > 400) T.events.shift(); }
+      const TASKS = [{ k: 'A', t: 'Spot the high-risk stops, then optimize the route', h: 'Screen 1: read the warning, tap Optimize route' }, { k: 'B', t: 'Open a high-risk stop and confirm 1 note is still accurate', h: 'Screen 3: tap Yes on one note' }, { k: 'C', t: 'Complete one delivery', h: 'Screen 4: fill the required items, then finish' }];
+      function taskStart(k) { if (T.run) return; T.run = { k, t0: Date.now(), taps0: T.taps, mis0: T.mis }; logEv('task-start', k); renderPanel(); tickTimer(); }
+      function taskEnd(result) { if (!T.run) return; const sec = (Date.now() - T.run.t0) / 1000; T.runs.push({ tester: T.tester || 'anonymous', task: T.run.k, result, sec: Math.round(sec * 10) / 10, taps: T.taps - T.run.taps0, mis: T.mis - T.run.mis0, at: new Date().toLocaleTimeString('en-GB'), scen: (st.dt === 'wd' ? 'weekday' : 'weekend') + ' ' + hm(st.start) }); saveRuns(); logEv('task-end', T.run.k + ':' + result); T.run = null; clearInterval(tickT); renderPanel(); }
+      function taskHit(k) { if (T.run && T.run.k === k) taskEnd('pass'); }
+      let tickT; function tickTimer() { clearInterval(tickT); tickT = setInterval(() => { const el = $('.runtimer'); if (el && T.run) el.textContent = ((Date.now() - T.run.t0) / 1000).toFixed(1) + 's'; }, 200); }
+      document.addEventListener('click', e => {
+        const g = e.target.closest('#glass'); if (!g) return;
+        T.taps++; const hit = e.target.closest('[data-act],button,[role=button],a,input,textarea,label,.hit,summary');
+        if (!hit) T.mis++;
+        logEv('tap', hit ? (hit.dataset.act || hit.tagName.toLowerCase()) : 'miss');
+      }, true);
+      const median = a => { if (!a.length) return null; const s = a.slice().sort((x, y) => x - y); const m = Math.floor(s.length / 2); return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2; };
+
+      /* ================= Side panel ================= */
+      function chartHTML() {
+        const W = 420, H = 236, pl = 34, pb = 44, pt = 26, gw = (W - pl - 8) / 4, bw = 24, gap = 4;
+        const types = ['school', 'office', 'gated_facility', 'industrial'], slots = ['morning', 'afternoon', 'evening'];
+        const y = v => pt + (H - pt - pb) * (1 - v);
+        let g = '';[0, .25, .5, .75, 1].forEach(t => { g += `<line x1="${pl}" x2="${W - 4}" y1="${y(t)}" y2="${y(t)}" stroke="var(--line)" stroke-width="1"/><text x="${pl - 6}" y="${y(t) + 3}" font-size="9" text-anchor="end" fill="var(--muted)">${Math.round(t * 100)}%</text>`; });
+        types.forEach((t, gi) => {
+          const x0 = pl + gi * gw + (gw - (3 * bw + 2 * gap)) / 2; let tot = 0;
+          slots.forEach((s, si) => {
+            const c = DATA.chart[t + '|' + s]; tot += c[0]; const x = x0 + si * (bw + gap), h = (H - pt - pb) * c[1];
+            g += `<rect x="${x}" y="${y(c[1])}" width="${bw}" height="${h}" rx="4" fill="var(--s-${s[0]})"><title>${TYPE_S[t]} · ${SLOT[s]}: ${pct(c[1], 1)} (n=${c[0]})</title></rect><text x="${x + bw / 2}" y="${y(c[1]) - 4}" font-size="9.5" font-weight="700" text-anchor="middle" fill="var(--fg)">${Math.round(c[1] * 100)}</text>`;
+          });
+          g += `<text x="${pl + gi * gw + gw / 2}" y="${H - 24}" font-size="10.5" font-weight="700" text-anchor="middle" fill="var(--fg)">${TYPE_S[t]}</text><text x="${pl + gi * gw + gw / 2}" y="${H - 11}" font-size="9.5" text-anchor="middle" fill="var(--muted)">n=${tot}</text>`;
+        });
+        const by = y(DATA.meta.fasr); g += `<line x1="${pl}" x2="${W - 4}" y1="${by}" y2="${by}" stroke="var(--fg)" stroke-width="1" stroke-dasharray="4 3" opacity=".6"/>`;
+        return `<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="First-attempt success by site type and time slot">${g}</svg>`;
+      }
+      function pLogic() {
+        const v = view(), info = infoMap(v), id = st.active, s = byId[id], I = info[id];
+        const base = makeBase(), plan = makePlan();
+        const dr = I ? lk(s.type, I.slot, st.dt) : null;
+        let f = 1; for (let i = 2; i <= plan.n; i++)f *= i;
+        const hits = { gps: !s.gpsOrder, fb: dr && dr.fb > 0, noreply: st.conf[id] === 'noreply' || st.conf[id] === 'pending', we: st.dt === 'we', late: !!st.alert, cap: st.notes[id].length >= 8, addr: true };
+        const edges = [
+          ['gps', 'Missing GPS pin (20.3% of rows in the dataset)', 'Use the average coordinates of the site (location_id).'],
+          ['fb', 'Rule cell has n < 30', 'Fall back to site type × time slot (all days), then to site type only.'],
+          ['noreply', 'Recipient does not reply within 15 min', 'Apply the safe slot from the rule (morning).'],
+          ['we', 'Weekend: offices and schools are often closed', 'Move to the next working day and keep the notes.'],
+          ['late', 'Running late or stuck in traffic', 'Re-plan the stop order from the current position.'],
+          ['cap', 'Address already has 8 notes', 'Replace the least-confirmed note, with a required reason.'],
+          ['addr', 'Address on the order is misspelled or only a landmark', 'Use the canonical site name from location_id.']
+        ];
+        return `<div class="pbody">
+   <div><h2 class="ph1">Logic layer: from data to action</h2><p class="psub">Updates for the open stop: <b>${esc(s.name)}</b>. The prototype reads the rule table built from the dataset; no numbers are typed by hand.</p></div>
+   <div class="pipe">
+    <div class="pstep"><span class="pn">1</span><div><h4>Input</h4><div class="box kvl"><span>Site type</span><span><b>${TYPE_L[s.type]}</b></span><span>Expected arrival</span><span><b>${I ? (I.deferred ? 'Tomorrow 08:30' : hm(I.eta)) : '—'}</b> (${I ? SLOT[I.slot] : '—'})</span><span>Day</span><span><b>${st.dt === 'wd' ? 'Weekday' : 'Weekend'}</b></span><span>Handling time</span><span><b>${s.svc} min</b> (per-site estimate)</span></div></div></div>
+    <div class="pstep"><span class="pn">2</span><div><h4>Rule (no AI)</h4><div class="box">Look up <b>site type × time slot × day</b> → first-attempt success rate.<br>Thresholds: <b>&lt; 60%</b> high risk · <b>60–75%</b> caution · <b>≥ 75%</b> good. A cell needs n ≥ 30.<br>For this stop: <b>${dr ? pct(dr.p, 1) : '—'}</b> (n=${dr ? dr.n : '—'})</div></div></div>
+    <div class="pstep"><span class="pn">3</span><div><h4>Output</h4><div class="box">The stop order with the best predicted success among ${num(f)} permutations. A stop with p &lt; 60% whose tomorrow-morning rate is at least 10 points higher (after a 5-point re-delivery penalty) is suggested for tomorrow.<br>Prediction: map route <b>${pct(base.exp, 1)}</b> → time-slot route <b>${pct(plan.exp, 1)}</b></div></div></div>
+    <div class="pstep"><span class="pn">4</span><div><h4>Action</h4><div class="box">Rider: follow the order, or keep a stop today (the rider has the final say).<br>Recipient: gets 2 quick questions about availability. No reply means the safe slot is used.</div></div></div>
+    <div class="pstep"><span class="pn">5</span><div><h4>Feedback</h4><div class="box">After each delivery the rule cell updates its n and rate. Starred notes and Yes/No confirmations keep the data close to reality.</div></div></div>
+   </div>
+   <div><div class="lbl">Edge cases</div><div class="pbody" style="gap:6px">${edges.map(([k, t, a]) => `<div class="edge ${hits[k] ? 'hit' : ''}"><span class="pill ${hits[k] ? 'p-warn' : 'p-mute'}">${hits[k] ? 'Active' : 'Standby'}</span><span><b>${t}</b><br>${a}</span></div>`).join('')}</div></div>
+  </div>`;
+      }
+      function pEvidence() {
+        const M = DATA.meta;
+        return `<div class="pbody">
+   <div><h2 class="ph1">Evidence from the Strategy Round dataset</h2><p class="psub">${num(M.orders)} orders, ${num(M.rows)} delivery rows, ${M.riders} riders, ${M.days} days. Only the first attempt of each order is counted.</p></div>
+   <div class="callouts"><div class="co"><b>59.7%</b><span>first-attempt success in the evening, vs 80.8% in the morning</span></div><div class="co"><b>42.3%</b><span>of failed first attempts come from school/agency stops visited in the evening (20.5% of orders)</span></div><div class="co"><b>53.9%</b><span>of evening re-deliveries succeed, vs 80.7% outside the evening</span></div></div>
+   <div><div class="lbl">First-attempt success by site type and time slot (%)</div>${chartHTML()}
+   <div class="legend"><span><i style="background:var(--s-m)"></i>Morning (&lt;12:00)</span><span><i style="background:var(--s-a)"></i>Afternoon (12–17)</span><span><i style="background:var(--s-e)"></i>Evening (≥17:00)</span><span><i style="background:transparent;border-top:2px dashed var(--fg);height:0;border-radius:0;vertical-align:3px"></i>Average ${dec(M.fasr * 100)}%</span></div></div>
+   <div class="tscroll"><table class="ptab"><thead><tr><th>Metric</th><th>Baseline</th><th>Case target</th></tr></thead><tbody>
+    <tr><td>First-attempt success</td><td>72.7%</td><td>88%</td></tr><tr><td>Re-delivery rate</td><td>26.4%</td><td>10.5%</td></tr><tr><td>Avg delivery attempts</td><td>1.33</td><td>1.10</td></tr><tr><td>Return rate</td><td>2.9%</td><td>1.5%</td></tr><tr><td>Final delivery success</td><td>97.1%</td><td>98.5%</td></tr></tbody></table></div>
+   <p class="psub"><b>Limits.</b> These are observed rates, not proof of cause. The 12:00 and 17:00 slot boundaries are an assumption because the dataset only labels morning, afternoon and evening. Industrial zones have just 185 orders, so more data is needed. The dataset has no per-attempt cost, no real recipient names and no rider tenure column. Recipient confirmation, traffic jams and the hub location in the prototype are simulated.</p>
+  </div>`;
+      }
+      function pTest() {
+        const runs = T.runs;
+        const sum = TASKS.map(t => { const r = runs.filter(x => x.task === t.k); const ok = r.filter(x => x.result === 'pass'); return { t, n: r.length, ok: ok.length, med: median(ok.map(x => x.sec)), taps: ok.length ? ok.reduce((a, b) => a + b.taps, 0) / ok.length : null, mis: r.reduce((a, b) => a + b.mis, 0) }; });
+        const cur = T.run;
+        return `<div class="pbody">
+   <div><h2 class="ph1">Scenario and test log</h2><p class="psub">Press Start on a task and let the tester use the phone. Time, taps and mis-taps are logged automatically. Have each tester do all 3 tasks, then copy the CSV into your report.</p></div>
+   <div><div class="lbl">Demo scenario</div><div class="seg" style="margin-bottom:8px"><button data-act="scen" data-k="dt" data-v="wd" class="${st.dt === 'wd' ? 'on' : ''}">Weekday</button><button data-act="scen" data-k="dt" data-v="we" class="${st.dt === 'we' ? 'on' : ''}">Weekend</button></div>
+   <div class="seg"><button data-act="scen" data-k="start" data-v="510" class="${st.start === 510 ? 'on' : ''}">Depart 08:30</button><button data-act="scen" data-k="start" data-v="960" class="${st.start === 960 ? 'on' : ''}">16:00</button><button data-act="scen" data-k="start" data-v="1050" class="${st.start === 1050 ? 'on' : ''}">17:30</button></div>
+   <div class="seg" style="margin-top:8px"><button data-act="late12" class="${st.late12 ? 'on' : ''}">Delivered 12 min late</button><button data-act="late0" class="${!st.late12 ? 'on' : ''}">On time</button><button data-act="reset">Reset demo</button></div></div>
+   <div><div class="lbl">Tester</div><input class="inp" id="tester" placeholder="Name or ID (e.g. P01)" value="${esc(T.tester)}"></div>
+   <div class="pbody" style="gap:8px">${TASKS.map(t => `<div class="task"><div class="tt"><b>Task ${t.k}. ${t.t}</b>${t.h}</div>${cur && cur.k === t.k ? `<span class="runtimer">0.0s</span><button class="stop" data-act="task-stop">Quit</button>` : `<button data-act="task-start" data-k="${t.k}" ${cur ? 'disabled style="opacity:.4"' : ''}>Start</button>`}</div>`).join('')}</div>
+   <div class="tscroll"><table class="ptab"><thead><tr><th>Task</th><th>Runs</th><th>Passed</th><th>Median</th><th>Avg taps</th><th>Mis-taps</th></tr></thead><tbody>${sum.map(r => `<tr><td>${r.t.k}</td><td>${r.n}</td><td>${r.n ? Math.round(r.ok / r.n * 100) + '%' : '—'}</td><td>${r.med == null ? '—' : dec(r.med) + 's'}</td><td>${r.taps == null ? '—' : dec(r.taps)}</td><td>${r.mis}</td></tr>`).join('')}</tbody></table></div>
+   <div class="tscroll"><table class="ptab"><thead><tr><th>Time</th><th>Tester</th><th>Task</th><th>Result</th><th>Sec</th><th>Taps</th></tr></thead><tbody>${runs.length ? runs.slice(-8).reverse().map(r => `<tr><td>${r.at}</td><td>${esc(r.tester)}</td><td>${r.task}</td><td>${r.result}</td><td>${r.sec}</td><td>${r.taps}</td></tr>`).join('') : '<tr><td colspan="6" style="color:var(--muted)">No runs yet. The log only holds runs you actually perform.</td></tr>'}</tbody></table></div>
+   <div class="seg"><button data-act="copycsv">Copy CSV</button><button data-act="clearruns">Clear log</button></div>
+  </div>`;
+      }
+      function renderPanel() {
+        const tabs = [['logic', 'Logic'], ['evidence', 'Evidence'], ['test', 'Test']];
+        const jumps = [['orders', '1 Orders'], ['route', '2 Route'], ['detail', '3 Stop'], ['done', '4 Complete']];
+        const body = st.tab === 'logic' ? pLogic() : st.tab === 'evidence' ? pEvidence() : pTest();
+        const keep = document.activeElement && document.activeElement.id === 'tester' ? { s: document.activeElement.selectionStart } : null;
+        $('#panel').innerHTML = `<div class="jump" style="margin-bottom:12px">${jumps.map(([k, l]) => `<button data-act="jump" data-v="${k}" class="${st.screen === k ? 'on' : ''}">${l}</button>`).join('')}</div>
+  <div class="ptabs" role="tablist">${tabs.map(([k, l]) => `<button role="tab" data-act="ptab" data-v="${k}" class="${st.tab === k ? 'on' : ''}" aria-selected="${st.tab === k}">${l}</button>`).join('')}</div>${body}`;
+        if (keep) { const el = $('#tester'); if (el) { el.focus(); try { el.setSelectionRange(keep.s, keep.s); } catch (e) { } } }
+        if (T.run) tickTimer();
+      }
+
+      /* ================= Events ================= */
+      document.addEventListener('click', e => {
+        const t = e.target.closest('[data-act]'); if (!t) return;
+        const a = t.dataset.act, v = t.dataset.v, id = t.dataset.id, d = st.draft;
+        switch (a) {
+          case 'go': go(v); break;
+          case 'toast': toast(v); break;
+          case 'filter': st.filter = v; render.orders(); renderPanel(); break;
+          case 'optimize': optimize(); break;
+          case 'nav': if (v === 'orders') go('orders'); else if (v === 'route') optimize(); else toast('This tab is outside the 4-screen prototype'); break;
+          case 'open': openStop(id); break;
+          case 'back3': go(st.optimized ? 'route' : 'orders'); break;
+          case 'delay': simDelay(); break;
+          case 'mzoom': { const box = t.closest('.mapbox'); const r = box.getBoundingClientRect(); zoomAt(box, r.left + r.width / 2, r.top + r.height / 2, box._M.k * (v === 'in' ? 1.5 : 1 / 1.5)); break; }
+          case 'mfit': fitMap(t.closest('.mapbox')); break;
+          case 'mzones': { const box = t.closest('.mapbox'); box._M.zones = !box._M.zones; t.classList.toggle('on', box._M.zones); t.setAttribute('aria-pressed', box._M.zones); applyMap(box); break; }
+          case 'mfull': { const box = t.closest('.mapbox'); const M = box._M; M.full = !M.full; M.sig = ''; render[st.screen](); break; }
+          case 'star': { const n = st.notes[st.active].find(x => x.id === id); n.star = !n.star; renderNotes(); renderPanel(); break; }
+          case 'vote': {
+            const n = st.notes[st.active].find(x => x.id === id), prev = st.votes[id];
+            if (prev === 'ok') n.ok--; if (prev === 'bad') n.bad--;
+            if (prev === v) { delete st.votes[id]; } else { st.votes[id] = v; if (v === 'ok') n.ok++; else n.bad++; if (!prev) addXP(3, 'Confirmed a note'); if (v === 'ok') taskHit('B'); }
+            renderNotes(); break;
+          }
+          case 'conf': { if (v === 'send') st.conf[id] = 'pending'; else if (v === 'yes') st.conf[id] = 'confirmed'; else if (v === 'none') st.conf[id] = 'noreply'; else st.conf[id] = 'none'; render.detail(); renderPanel(); break; }
+          case 'force': st.force[st.active] = true; toast('Stop kept in today\'s route'); render.detail(); renderPanel(); break;
+          case 'move': { const id2 = st.active; st.moved[id2] = true; st.alert = { text: esc(byId[id2].name) + ' moved to tomorrow morning. The recipient will get a message to confirm the new time.', ok: true }; addXP(5, 'Followed a suggestion'); go('route'); break; }
+          case 'fail': overlay(`<h2 class="h1" style="font-size:18px">Delivery failed</h2><p class="sub">Pick a reason so the hub can handle this order.</p><div class="chipset">${['Recipient could not come out', 'Outside office hours', 'Guard did not allow entry', 'No one to receive', 'Wrong address'].map(r => `<button class="chip line" data-act="fail-reason" data-v="${r}">${r}</button>`).join('')}</div><div class="field-row"><button class="btn ghost" style="flex:1" data-act="close">Cancel</button><button class="btn primary" style="flex:2" data-act="fail-send" id="failBtn" disabled>Confirm</button></div>`); break;
+          case 'fail-reason': $$('#overlay .chip').forEach(c => c.classList.toggle('on', c === t)); $('#failBtn').disabled = false; break;
+          case 'fail-send': {
+            const sid = st.active, s = byId[sid]; st.failed[sid] = true;
+            const opts = ['morning', 'afternoon', 'evening'].map(sl => ({ sl, p: lk(s.type, sl, 'wd').p })).sort((x, y) => y.p - x.p); const ev = lk(s.type, 'evening', 'wd').p;
+            st.clock = Math.max(st.clock, actualFor(sid).eta) + s.svc; st.pos = sid;
+            overlay(`<div class="okc" style="margin:0 auto 10px;background:var(--warn)">${ic('clock', 30)}</div><h2 class="h1" style="font-size:19px">Failed delivery logged</h2><p class="sub">Suggested retry: <b>${SLOT[opts[0].sl].toLowerCase()} of the next working day</b> (${pct(opts[0].p)}) instead of the evening (${pct(ev)}). In the data, evening re-deliveries succeed only 53.9% of the time vs 80.7% outside the evening.</p><button class="btn primary block" style="margin-top:14px" data-act="after">Back to orders</button>`, 'center'); break;
+          }
+          case 'close': closeOverlay(); break;
+          case 'deliver': resetDraft(); go('done'); break;
+          case 'cod': d.cod = !d.cod; t.classList.toggle('on', d.cod); t.setAttribute('aria-checked', d.cod); refreshDone(); break;
+          case 'late-reason': d.reason = v; $$('[data-act=late-reason]').forEach(c => c.classList.toggle('on', c === t)); refreshDone(); break;
+          case 'tag': { const ta = $('#noteText'); ta.value = ((ta.value ? ta.value + '. ' : '') + v).slice(0, 140); $('#ncnt').textContent = ta.value.length + '/140'; break; }
+          case 'mic': startVoice(); break;
+          case 'dstar': d.star = !d.star; t.classList.toggle('on', d.star); t.setAttribute('aria-pressed', d.star); break;
+          case 'addnote': {
+            const ta = $('#noteText'), txt = ta.value.trim(), arr = st.notes[st.active];
+            if (!txt && !d.photo) { toast('Type a note or add a photo first'); break; }
+            if (arr.length >= 8) {
+              const low = arr.slice().sort((x, y) => x.n - y.n)[0];
+              overlay(`<h2 class="h1" style="font-size:18px">This address already has 8 notes</h2><p class="sub">To add a new one, replace an old note. Suggested: the least-reported note.</p><div id="rlist" style="margin:10px 0">${arr.map(n => `<button class="srow" style="width:100%;text-align:left;${n.id === low.id ? 'box-shadow:inset 0 0 0 2px var(--brand)' : ''}" data-act="rep-pick" data-id="${n.id}"><div class="t"><b>${esc(n.t)}</b><span>Logged ${n.n} times</span></div></button>`).join('')}</div><div class="chipset">${DELR.map(r => `<button class="chip line" data-act="rep-reason" data-v="${r}">${r}</button>`).join('')}</div><div class="field-row"><button class="btn ghost" style="flex:1" data-act="close">Cancel</button><button class="btn primary" style="flex:2" data-act="rep-ok" id="repBtn" disabled>Replace note</button></div>`);
+              st.draft.rep = { id: low.id, reason: '' }; break;
+            }
+            pushNote(txt); break;
+          }
+          case 'rep-pick': st.draft.rep.id = id; $$('#rlist .srow').forEach(r => r.style.boxShadow = r.dataset.id === id ? 'inset 0 0 0 2px var(--brand)' : ''); break;
+          case 'rep-reason': st.draft.rep.reason = v; $$('#overlay .chip').forEach(c => c.classList.toggle('on', c === t)); $('#repBtn').disabled = false; break;
+          case 'rep-ok': { const arr = st.notes[st.active], i = arr.findIndex(n => n.id === st.draft.rep.id); if (i > -1) arr.splice(i, 1); closeOverlay(); addXP(8, 'Replaced a note, with reason'); pushNote($('#noteText').value.trim()); break; }
+          case 'delpick': d.delId = id; d.delReason = ''; $('#delForm').hidden = false; $$('#dlist .drow').forEach(r => r.style.opacity = r.querySelector('[data-id="' + id + '"]') ? 1 : .4); $$('[data-act=del-reason]').forEach(c => c.classList.remove('on')); $('#delForm').scrollIntoView({ behavior: 'smooth', block: 'nearest' }); break;
+          case 'del-reason': d.delReason = v; $$('[data-act=del-reason]').forEach(c => c.classList.toggle('on', c === t)); break;
+          case 'delcancel': d.delId = null; $('#delForm').hidden = true; refreshDone(); break;
+          case 'delsend': {
+            if (!d.delReason) { toast('Please pick a reason'); break; }
+            const arr = st.notes[st.active], i = arr.findIndex(n => n.id === d.delId); if (i > -1) arr.splice(i, 1); d.delId = null; $('#delForm').hidden = true; $('#delText').value = ''; addXP(8, 'Requested a note removal'); refreshDone(); break;
+          }
+          case 'finish': {
+            const sid = st.active, s = byId[sid]; const pl = makePlan(); const before = pl.order.join() + '|' + pl.deferred.join();
+            const { act } = actualFor(sid);
+            if (st.late12) addXP(5, 'Explained the delay'); else addXP(5, 'On-time delivery'); addXP(10, 'Delivery completed');
+            st.done[sid] = true; st.clock = act + s.svc; st.pos = sid; st.alert = null; st.incident = null;
+            replanAfter(before, 'Delivered ' + esc(s.name) + '.');
+            taskHit('C');
+            const tot = st.earned.reduce((x, y) => x + y.xp, 0), lv = st.leveled; st.leveled = false;
+            overlay(`<div class="okc" style="margin:0 auto 10px">${ic('check', 32)}</div><h2 class="h1" style="font-size:20px">${lv ? 'Level up! Level ' + st.lvl : 'Order completed'}</h2>
+       <p class="sub">${lv ? 'You are now a ' + lvName(st.lvl) : 'Thanks for updating info for the next rider'}</p>
+       <div class="card" style="margin:14px 0;text-align:left"><div class="rowline" style="margin-bottom:8px"><b>Level ${st.lvl} · ${lvName(st.lvl)}</b><span class="pill p-brand">+${tot} XP</span></div><div class="bar"><i style="width:${st.xp / 5}%"></i></div><p class="sub" style="margin-top:6px">${st.xp}/500 XP to level ${st.lvl + 1}</p></div>
+       <button class="btn primary block" data-act="after">${remaining().length ? 'Back to orders' : 'Finish shift'}</button>`, 'center'); break;
+          }
+          case 'after': closeOverlay(); st.earned = []; go('orders'); break;
+          case 'jump': { closeOverlay(); if (v !== 'orders') st.optimized = true; if (v === 'detail' || v === 'done') { const vv = view(), inf = infoMap(vv), ids = vv.order.concat(vv.deferred || []); const red = ids.find(i => rk(inf[i].p) === 'red'); st.active = red || ids[0] || 's1'; if (v === 'done') { st.earned = []; resetDraft(); } } go(v); break; }
+          case 'ptab': st.tab = v; renderPanel(); break;
+          case 'scen': setScenario(t.dataset.k, v); break;
+          case 'late12': st.late12 = true; if (st.screen === 'done') render.done(); renderPanel(); break;
+          case 'late0': st.late12 = false; if (st.screen === 'done') render.done(); renderPanel(); break;
+          case 'reset': { const keepTab = st.tab; init(); st.tab = keepTab; closeOverlay(); go('orders'); break; }
+          case 'task-start': taskStart(t.dataset.k); break;
+          case 'task-stop': taskEnd('quit'); break;
+          case 'copycsv': {
+            const hdr = 'tester,task,result,seconds,taps,mistaps,time,scenario'; const rows = T.runs.map(r => [r.tester, r.task, r.result, r.sec, r.taps, r.mis, r.at, r.scen].join(',')); const csv = [hdr].concat(rows).join('\n');
+            const fb = () => { const ta = document.createElement('textarea'); ta.value = csv; document.body.appendChild(ta); ta.select(); try { document.execCommand('copy'); } catch (e) { } ta.remove(); };
+            if (navigator.clipboard && navigator.clipboard.writeText) { navigator.clipboard.writeText(csv).then(() => toast('CSV copied'), () => { fb(); toast('CSV copied'); }); } else { fb(); toast('CSV copied'); } break;
+          }
+          case 'clearruns': T.runs = []; saveRuns(); renderPanel(); break;
+        }
+      });
+      function pushNote(txt) {
+        const d = st.draft, arr = st.notes[st.active];
+        arr.push({ id: 'u' + Date.now(), t: txt || 'Photo note', n: 1, last: 'today', eff: null, star: d.star, ok: 0, bad: 0, photo: d.photo, mine: true });
+        addXP(10, 'New note'); if (d.photo) addXP(15, 'Note with photo'); if (d.voice) addXP(5, 'Voice note');
+        const ta = $('#noteText'); if (ta) { ta.value = ''; $('#ncnt').textContent = '0/140'; } d.photo = null; d.voice = false; d.star = false;
+        const th = $('#noteThumb'); if (th) th.style.display = 'none'; const sb = $('#starBtn'); if (sb) sb.classList.remove('on'); refreshDone();
+      }
+      document.addEventListener('keydown', e => { if ((e.key === 'Enter' || e.key === ' ') && e.target.matches('[role=button]')) { e.preventDefault(); e.target.click(); } });
+      document.addEventListener('input', e => {
+        if (e.target.id === 'noteText') $('#ncnt').textContent = e.target.value.length + '/140';
+        if (e.target.id === 'tester') T.tester = e.target.value;
+        if (e.target.id === 'q') { st.q = e.target.value; const v = view(); $('#olist').innerHTML = listHTML(v, infoMap(v)); }
+      });
+      document.addEventListener('change', e => {
+        const f = e.target.files && e.target.files[0]; if (!f) return; const url = URL.createObjectURL(f);
+        if (e.target.id === 'podFile') { st.draft.pod = url; $('#podThumb').innerHTML = '<img src="' + url + '" alt="Delivery photo">'; toast('Delivery photo added'); }
+        if (e.target.id === 'noteFile') { st.draft.photo = url; const t = $('#noteThumb'); t.style.display = 'grid'; t.innerHTML = '<img src="' + url + '" alt="Note photo">'; }
+      });
+      init(); go('orders');
+    })();
+  </script>
+
+</body>
+
+</html>
